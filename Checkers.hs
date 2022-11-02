@@ -25,11 +25,15 @@ type Square = (Int, Fill)
 -- This type contains a move. The first integer in the tuple is the location of the 
 -- checker and the second integer is the location the player wants to move their piece.
 
-type Move = (Int,Int)
+type Loc = Int
+
+type Move = (Loc,Loc)
 
 -- This type represnts our board.
 
-type Board = [Square]
+type Board = [(Loc, Color)]
+data GameState = (Color, Board)
+
 
 
 --                                                     Show Methods
