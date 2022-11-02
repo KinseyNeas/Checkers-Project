@@ -32,6 +32,17 @@ type Move = (Int,Int)
 type Board = [Square]
 
 
+--                                                     Show Methods
+
+-- Instances of show so that player can see board and pieces.
+
+instance Show Square where
+    undefined
+
+instance Show Board where 
+    undefined
+
+
 --                                                      Functions
 
 -- Checks if a move, based on the type and color of the piece, is legal.
@@ -43,6 +54,11 @@ isValidMove = undefined
 
 updateBoard :: Board -> Move -> Board
 updateBoard = undefined
+
+-- Function used to check if the game is over.
+
+checkGameOver :: Board -> Bool
+checkGameOver = undefined
 
 
 --                                                      Extra Notes
