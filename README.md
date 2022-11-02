@@ -1,5 +1,5 @@
 Checkuhs
-We will be solving checkuhs.
+We have be solving checkuhs.
 Kinsey
 Josh
 Sean
