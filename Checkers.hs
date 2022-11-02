@@ -65,7 +65,7 @@ updateBoard = undefined
 
 -- Function used to check if the game is over.
 
-checkGameOver :: Board -> Bool
+checkGameOver :: GameState -> Bool
 checkGameOver = undefined
 
 
