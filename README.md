@@ -2,5 +2,5 @@ Checkuhs
 We have be solving checkuhs.
 Kinsey
 Josh
-Seanshshsh
+Sean
 Marcos
