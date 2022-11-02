@@ -3,7 +3,7 @@ import Data.List (sort)
 import Debug.Trace
 import Data.List
 
---                                                      Type Alises
+--                                                      Type Aliases
 
 -- This data type is meant to represent what a tile on our board contains at any given moment.
 
@@ -14,7 +14,7 @@ data Fill = Empty | Checker Color Type
 
 data Color = Red | Black
 
--- This data type clarrifies the type of piece being moved by the player. This will affect the limitations of the piece.
+-- This data type clarifies the type of piece being moved by the player. This will affect the limitations of the piece.
 
 data Type = Single | Double
 
