@@ -7,31 +7,32 @@ import Data.List
 
 -- This data type is meant to represent what a tile on our board contains at any given moment.
 
-data Fill = Empty | Checker Color Type
+data PlayerPiece = PlayerPiece Color Type derving Eq
 
 -- This data type differentiates the color of the pieces so that we can keep track of which
 -- player is playing/check if they are moving the correct pieces.
 
-data Color = Red | Black
+data Color = Red | Black derving Eq
 
 -- This data type clarifies the type of piece being moved by the player. This will affect the limitations of the piece.
 
-data Type = Single | Double
+data Type = Single | Double derving Eq
 
 -- This type tells us the position of the square on the board and what it holds.
 
-type Square = (Int, Fill)
+type FilledSquare = (Loc, PlayerPiece)
 
 -- This type contains a move. The first integer in the tuple is the location of the 
 -- checker and the second integer is the location the player wants to move their piece.
 
-type Loc = Int
+type Loc = (Int, Int)
 
 type Move = (Loc,Loc)
 
 -- This type represnts our board.
 
-type Board = [(Loc, Color)]
+type Board = [FilledSquare]
+
 data GameState = (Color, Board)
 
 
@@ -51,12 +52,15 @@ instance Show Board where
 
 -- Checks if a move, based on the type and color of the piece, is legal.
 
-isValidMove :: Move -> Color -> Bool
+isValidMove :: Move -> GameState -> Bool
 isValidMove = undefined
+
+isCapture :: Move -> GameState -> Bool
+isCapture = undefined
 
 -- Once a move is confirmed to be legal, we can update the board to reflect the new Move.
 
-updateBoard :: Board -> Move -> Board
+updateBoard :: GameState -> Move -> GameState
 updateBoard = undefined
 
 -- Function used to check if the game is over.
