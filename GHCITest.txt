@@ -1,7 +1,0 @@
--- This tester code is made for the sake of GHCI testing and other case-by-case studies that might serve in the debugging of this program. --
--- Feel free to add more cases if you want to --
-
--- Initialize a new board with the default position
-redPiece = (Red, NoKing)
-blackPiece = (Black, NoKing)
-board = [(redPiece, (0, 1)),(redPiece, (0, 3)), (redPiece, (0, 5)), (redPiece, (0, 7)), (redPiece, (1, 0)), (redPiece, (1, 2)), (redPiece, (1, 4)), (redPiece, (1, 6)), (redPiece, (2, 1)), (redPiece, (2, 3)), (redPiece, (2, 5)), (redPiece, (2, 7)), (blackPiece, (6, 0)), (blackPiece, (6, 2)), (blackPiece, (6, 4)), (blackPiece, (6, 6)), (blackPiece, (7, 1)), (blackPiece, (7, 3)), (blackPiece, (7, 5)), (blackPiece, (7, 7)), (blackPiece, (8, 0)), (blackPiece, (8, 2)), (blackPiece, (8, 4)), (blackPiece, (8, 6))]
