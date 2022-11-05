@@ -7,7 +7,7 @@ import Data.List
 
 -- This data type is meant to represent what a tile on our board contains at any given moment.
 
-data PlayerPiece = PlayerPiece Color Type derving Eq
+type Piece = (Color, Class)
 
 -- This data type differentiates the color of the pieces so that we can keep track of which
 -- player is playing/check if they are moving the correct pieces.
@@ -16,11 +16,7 @@ data Color = Red | Black derving Eq
 
 -- This data type clarifies the type of piece being moved by the player. This will affect the limitations of the piece.
 
-data Type = Single | Double derving Eq
-
--- This type tells us the position of the square on the board and what it holds.
-
-type FilledSquare = (Loc, PlayerPiece)
+data Class = NoKing | King derving Eq
 
 -- This type contains a move. The first integer in the tuple is the location of the 
 -- checker and the second integer is the location the player wants to move their piece.
@@ -31,43 +27,45 @@ type Move = (Loc,Loc)
 
 -- This type represnts our board.
 
-type Board = [FilledSquare]
+type Board = [(Loc, Piece)]
 
-data GameState = (Color, Board)
+type GameState = (Color, Board, Maybe Loc)
 
 
-
---                                                     Show Methods
+--                                                     Print Function
 
 -- Instances of show so that player can see board and pieces.
 
-instance Show Square where
-    undefined
-
-instance Show Board where 
-    undefined
+printBoard :: GameState -> [String]
+printBoard = undefined
 
 
 --                                                      Functions
 
 -- Checks if a move, based on the type and color of the piece, is legal.
 
+
 isValidMove :: Move -> GameState -> Bool
 isValidMove = undefined
+
+validMoves :: Move -> GameState -> [Moves]
+validMoves = undefined
 
 isCapture :: Move -> GameState -> Bool
 isCapture = undefined
 
 -- Once a move is confirmed to be legal, we can update the board to reflect the new Move.
 
-updateBoard :: GameState -> Move -> GameState
-updateBoard = undefined
+makeMove :: GameState -> Move -> Maybe GameState
+makeMove = undefined
 
 -- Function used to check if the game is over.
 
 checkGameOver :: GameState -> Bool
 checkGameOver = undefined
 
+checkWinner :: GameState -> Color
+checkWinner = undefined
 
 --                                                      Extra Notes
 --
