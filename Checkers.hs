@@ -12,11 +12,11 @@ type Piece = (Color, Class)
 -- This data type differentiates the color of the pieces so that we can keep track of which
 -- player is playing/check if they are moving the correct pieces.
 
-data Color = Red | Black derving Eq
+data Color = Red | Black deriving Eq
 
 -- This data type clarifies the type of piece being moved by the player. This will affect the limitations of the piece.
 
-data Class = NoKing | King derving Eq
+data Class = NoKing | King deriving Eq
 
 -- This type contains a move. The first integer in the tuple is the location of the 
 -- checker and the second integer is the location the player wants to move their piece.
@@ -37,9 +37,15 @@ type GameState = (Color, Board, Maybe Loc)
 -- Instances of show so that player can see board and pieces.
 
 printBoard :: GameState -> [String]
-printBoard = undefined
+printBoard (c,board,mLoc) = [printRow board [(x,y)|x <- [0..7]] |y <- [0..7]] --(zip [0..7] y)
 
-
+printRow :: Board -> [Loc] -> String
+printRow _ [] = ""
+printRow [] (p:ps) = "_ " ++ printRow [] ps
+printRow (b:bs) (p:ps) = 
+    if (fst b == p) then show (fst (snd b))++ " " ++ printRow bs ps
+    else if (snd (fst b) /= snd p) then "_ " ++ printRow bs ps
+    else "_ " ++ printRow (b:bs) ps
 --                                                      Functions
 
 -- Checks if a move, based on the type and color of the piece, is legal.
@@ -48,7 +54,7 @@ printBoard = undefined
 isValidMove :: Move -> GameState -> Bool
 isValidMove = undefined
 
-validMoves :: Move -> GameState -> [Moves]
+validMoves :: Move -> GameState -> [Move]
 validMoves = undefined
 
 isCapture :: Move -> GameState -> Bool
