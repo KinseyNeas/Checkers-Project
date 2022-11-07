@@ -12,11 +12,11 @@ type Piece = (Color, Class)
 -- This data type differentiates the color of the pieces so that we can keep track of which
 -- player is playing/check if they are moving the correct pieces.
 
-data Color = Red | Black deriving Eq
+data Color = Red | Black deriving (Show, Eq)
 
 -- This data type clarifies the type of piece being moved by the player. This will affect the limitations of the piece.
 
-data Class = NoKing | King deriving Eq
+data Class = NoKing | King deriving (Show, Eq)
 
 -- This type contains a move. The first integer in the tuple is the location of the 
 -- checker and the second integer is the location the player wants to move their piece.
@@ -63,15 +63,30 @@ isCapture = undefined
 -- Once a move is confirmed to be legal, we can update the board to reflect the new Move.
 
 makeMove :: GameState -> Move -> Maybe GameState
-makeMove = undefined
+makeMove gState move = 
+    let x = isValidMove move gState
+    in case x of
+            False -> Nothing
+            True -> Just (updateState gState move)
+
+
+updateState :: GameState -> Move -> GameState
+updateState (c, board, mLoc) move = (nextPlayer, updateBoard board move, mLoc)
+    where nextPlayer = if c == Red then Black else Red
+
+updateBoard :: Board -> Move -> Board
+updateBoard board (l1, l2) = [if loc == l1 then (l2, piece) else (loc, piece) | (loc, piece) <- board]
+
+--Once a move is made, we will need to check whether or not that piece needs to be kinged or not.
 
 -- Function used to check if the game is over.
 
 checkGameOver :: GameState -> Bool
-checkGameOver = undefined
+checkGameOver (c, board, mLoc) = r == 0 || b == 0
+    where (r,b) = foldr (\(loc, (color, king)) (r,b) -> if color == Red then (r+1,b) else (r,b+1)) (0,0) board
 
 checkWinner :: GameState -> Color
-checkWinner = undefined
+checkWinner (c, ((x,y):ys), mLoc) = fst y
 
 --                                                      Extra Notes
 --
