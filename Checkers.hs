@@ -32,8 +32,6 @@ type Board = [(Loc, Piece)]
 type GameState = (Color, Board, Maybe Loc)
 
 
-
-
 --                                                     Print Function
 
 -- Instances of show so that player can see board and pieces.
@@ -60,88 +58,51 @@ isValidMove (l1,l2) (c, board, mLoc) =
         else if ((c == Red && snd l2 == snd l1 - 1 )||(c == Black && snd l2 == snd l1 + 1)) then
             if (fst l2 == (fst l1) + 1 || fst l2 == (fst l1) - 1) then
                 if (id2 == []) then True
-                -- else if ((isCapture (l1,l2) (c, board, mLoc) id2) == True) then True
                 else False
             else False
         else False
 
--- id2 = [(l,p)|(l,p) <- board, l2 == l]
--- l3 = (if( fst l2 - fst l1 > 0) then fst l2 + 1 else fst l2 - 1, if( snd l2 - snd l1 > 0) then snd l2 + 1 else snd l2 - 1)
 validMoves :: GameState -> [Move] 
 validMoves (c, board, mLoc) = 
     if (mLoc == Nothing) then
-        if (c == Red) then redValidMoves (c, board, mLoc)
-        else blackValidMoves (c, board, mLoc)
+        colorValidMoves (c, board, mLoc)
     else
-        let Just (mx,my) = mLoc
-            piece = foldr (\(l,p) (a,c) -> if(a == l) then (l,p) else (a,c)) ((mx,my), (c, NoKing)) board
-        in  if (fst(snd piece) == Black) then
-                let idL = [(l,p)|(l,p) <- board, (mx-1,my+1) == l]
-                    idR = [(l,p)|(l,p) <- board, (mx+1,my+1) == l]
-                    l3L = (mx - 2, my + 2)
-                    l3R = (mx + 2, my + 2)
-                in  if (isValidMove ((mx,my),(mx-1,my+1)) (c, board, Just (mx,my)) == True && isValidMove ((mx,my),(mx+1,my+1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx-1,my+1)), ((mx,my),(mx+1,my+1))]
-                    else if (isValidMove ((mx,my),(mx-1,my+1)) (c, board, Just (mx,my)) == True && isCapture ((mx,my),(mx+1,my+1)) (c, board, Just (mx,my)) idR == True) then [((mx,my),(mx-1,my+1)), ((mx,my),l3R)]
-                    else if (isCapture ((mx,my),(mx-1,my+1)) (c, board, Just (mx,my)) idL == True && isValidMove ((mx,my),(mx+1,my+1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx+1,my+1)), ((mx,my),l3L)]
-                    else if (isCapture ((mx,my),(mx-1,my+1)) (c, board, Just (mx,my)) idL == True && isCapture ((mx,my),(mx+1,my+1)) (c, board, Just (mx,my)) idR == True) then [((mx,my),l3L), ((mx,my),l3R)]
-                    else if (isValidMove ((mx,my),(mx-1,my+1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx-1,my+1))]
-                    else if (isValidMove ((mx,my),(mx+1,my+1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx+1,my+1))]
-                    else if (isCapture ((mx,my),(mx-1,my+1)) (c, board, Just (mx,my)) idL == True) then [((mx,my),l3L)]
-                    else if (isCapture ((mx,my),(mx+1,my+1)) (c, board, Just (mx,my)) idR == True) then [((mx,my),l3R)]
-                    else []
-                {-if (isValidMove ((mx,my),(mx-1,my+1)) (c, board, Just (mx,my)) == True && isValidMove ((mx,my),(mx+1,my+1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx-1,my+1)), ((mx,my),(mx+1,my+1))]
-                else if (isValidMove ((mx,my),(mx-1,my+1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx-1,my+1))]
-                else if (isValidMove ((mx,my),(mx+1,my+1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx+1,my+1))]
-                else []-}
-            else
-                let idL = [(l,p)|(l,p) <- board, (mx-1,my-1) == l]
-                    idR = [(l,p)|(l,p) <- board, (mx+1,my-1) == l]
-                    l3L = (mx - 2, my - 2)
-                    l3R = (mx + 2, my - 2)
-                in  if (isValidMove ((mx,my),(mx-1,my-1)) (c, board, Just (mx,my)) == True && isValidMove ((mx,my),(mx+1,my-1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx-1,my-1)), ((mx,my),(mx+1,my-1))]
-                    else if (isValidMove ((mx,my),(mx-1,my-1)) (c, board, Just (mx,my)) == True && isCapture ((mx,my),(mx-1,my-1)) (c, board, Just (mx,my)) idR == True) then [((mx,my),(mx-1,my-1)), ((mx,my),l3R)]
-                    else if (isCapture ((mx,my),(mx+1,my-1)) (c, board, Just (mx,my)) idL == True && isValidMove ((mx,my),(mx+1,my-1)) (c, board, Just (mx,my)) == True) then [((mx,my),l3L), ((mx,my),(mx+1,my-1))]
-                    else if (isCapture ((mx,my),(mx-1,my-1)) (c, board, Just (mx,my)) idL == True && isCapture ((mx,my),(mx+1,my-1)) (c, board, Just (mx,my)) idR == True) then [((mx,my),l3L), ((mx,my),l3R)]
-                    else if (isValidMove ((mx,my),(mx-1,my-1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx-1,my-1))]
-                    else if (isValidMove ((mx,my),(mx+1,my-1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx+1,my-1))]
-                    else if (isCapture ((mx,my),(mx+1,my-1)) (c, board, Just (mx,my)) idL == True) then [((mx,my),l3L)]
-                    else if (isCapture ((mx,my),(mx-1,my-1)) (c, board, Just (mx,my)) idR == True) then [((mx,my),l3R)]
-                    else []
-                {-if (isValidMove ((mx,my),(mx-1,my-1)) (c, board, Just (mx,my)) == True && isValidMove ((mx,my),(mx+1,my-1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx-1,my-1)), ((mx,my),(mx+1,my-1))]
-                else if (isValidMove ((mx,my),(mx-1,my-1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx-1,my-1))]
-                else if (isValidMove ((mx,my),(mx+1,my-1)) (c, board, Just (mx,my)) == True) then [((mx,my),(mx+1,my-1))]
-                else []-}
+        justValidMoves (c, board, mLoc)
 
-redValidMoves :: GameState -> [Move]
-redValidMoves (c, board, mLoc) = foldr (\((x,y),p) acc -> 
-    let idL = [(l,p)|(l,p) <- board, (x-1,y-1) == l]
-        idR = [(l,p)|(l,p) <- board, (x+1,y-1) == l]
-        l3L = (x - 2, y - 2)
-        l3R = (x + 2, y - 2)
-    in  if (isValidMove ((x,y),(x-1,y-1)) (c, board, mLoc) == True && isValidMove ((x,y),(x+1,y-1)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(x-1,y-1))] ++ [((x,y),(x+1,y-1))]
-        else if (isValidMove ((x,y),(x-1,y-1)) (c, board, mLoc) == True && isCapture ((x,y),(x-1,y-1)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),(x-1,y-1))] ++ [((x,y),l3R)]
-        else if (isCapture ((x,y),(x+1,y-1)) (c, board, mLoc) idL == True && isValidMove ((x,y),(x+1,y-1)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),(x+1,y-1))]
-        else if (isCapture ((x,y),(x-1,y-1)) (c, board, mLoc) idL == True && isCapture ((x,y),(x+1,y-1)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),l3R)]
-        else if (isValidMove ((x,y),(x-1,y-1)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(x-1,y-1))]
-        else if (isValidMove ((x,y),(x+1,y-1)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(x+1,y-1))]
-        else if (isCapture ((x,y),(x+1,y-1)) (c, board, mLoc) idL == True && fst p == c) then acc ++ [((x,y),l3L)]
-        else if (isCapture ((x,y),(x-1,y-1)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3R)]
-        else acc) [] board
+justValidMoves :: GameState -> [Move]
+justValidMoves (c, board, mLoc) =  
+    let Just (mx,my) = mLoc
+        piece = foldr (\(l,p) (a,c) -> if(a == l) then (l,p) else (a,c)) ((mx,my), (c, NoKing)) board
+        (xl2,xr2,y2) = if (fst(snd piece) == Red) then (mx-1,mx+1,my-1) else (mx+1,mx-1,my+1)
+        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l]
+        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l]
+        l3L = if (fst(snd piece) == Red) then (mx-2,my-2) else (mx+2,my+2)
+        l3R = if (fst(snd piece) == Red) then (mx+2,my-2) else (mx-2,my+2)
+    in  if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True && isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xl2,y2)),((mx,my),(xr2,y2))]
+        else if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True && isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),(xl2,y2)),((mx,my),l3R)]
+        else if (isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idL == True && isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),l3L),((mx,my),(xr2,y2))]
+        else if (isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idL == True && isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),l3L),((mx,my),l3R)]
+        else if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xl2,y2))]
+        else if (isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xr2,y2))]
+        else if (isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idL == True) then  [((mx,my),l3L)]
+        else if (isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),l3R)]
+        else []
 
-blackValidMoves :: GameState -> [Move]
-blackValidMoves (c, board, mLoc) = foldr (\((x,y),p) acc -> 
-    let idL = [(l,p)|(l,p) <- board, (x-1,y+1) == l]
-        idR = [(l,p)|(l,p) <- board, (x+1,y+1) == l]
-        l3L = (x - 2, y + 2)
-        l3R = (x + 2, y + 2)
-    in  if (isValidMove ((x,y),(x-1,y+1)) (c, board, mLoc) == True && isValidMove ((x,y),(x+1,y+1)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(x-1,y+1))] ++ [((x,y),(x+1,y+1))]
-        else if (isValidMove ((x,y),(x-1,y+1)) (c, board, mLoc) == True && isCapture ((x,y),(x+1,y+1)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),(x-1,y+1))] ++ [((x,y),l3R)]
-        else if (isCapture ((x,y),(x-1,y+1)) (c, board, mLoc) idL == True && isValidMove ((x,y),(x+1,y+1)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(x+1,y+1))] ++ [((x,y),l3L)]
-        else if (isCapture ((x,y),(x-1,y+1)) (c, board, mLoc) idL == True && isCapture ((x,y),(x+1,y+1)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),l3R)]
-        else if (isValidMove ((x,y),(x-1,y+1)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(x-1,y+1))]
-        else if (isValidMove ((x,y),(x+1,y+1)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(x+1,y+1))]
-        else if (isCapture ((x,y),(x-1,y+1)) (c, board, mLoc) idL == True && fst p == c) then acc ++ [((x,y),l3L)]
-        else if (isCapture ((x,y),(x+1,y+1)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3R)]
+colorValidMoves :: GameState -> [Move]
+colorValidMoves (c, board, mLoc) = foldr (\((x,y),p) acc -> 
+    let (xl2,xr2,y2) = if (c == Red) then (x-1,x+1,y-1) else (x+1,x-1,y+1)
+        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l]
+        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l]
+        l3L = if (c == Red) then (x-2,y-2) else (x+2,y+2)
+        l3R = if (c == Red) then (x+2,y-2) else (x-2,y+2)
+    in  if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xl2,y2))] ++ [((x,y),(xr2,y2))]
+        else if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),(xl2,y2))] ++ [((x,y),l3R)]
+        else if (isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idL == True && isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),(xr2,y2))]
+        else if (isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idL == True && isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),l3R)]
+        else if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xl2,y2))]
+        else if (isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xr2,y2))]
+        else if (isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idL == True && fst p == c) then acc ++ [((x,y),l3L)]
+        else if (isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3R)]
         else acc) [] board
 
 isCapture :: Move -> GameState -> [(Loc, Piece)] -> Bool
@@ -153,6 +114,7 @@ isCapture (l1,l2) (c, board, mLoc) [(m,p2)] =
             if (id3 == [] && fst l3 <= 7 && fst l3 > 0 && snd l3 <= 7 && snd l3 > 0) then True
             else False
         else False
+
 -- Once a move is confirmed to be legal, we can update the board to reflect the new Move.
 
 makeMove :: GameState -> Move -> Maybe GameState
@@ -215,7 +177,3 @@ checkWinner = undefined
 --  - A player wins the game when the opponent cannot make a move.
 --  - This happens usually because all of the opponent's pieces have been captured, 
 --    but it could also be because all of his pieces are blocked in.
-
-
-
-
