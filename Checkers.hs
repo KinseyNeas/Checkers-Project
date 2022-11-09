@@ -31,6 +31,12 @@ type Board = [(Loc, Piece)]
 
 type GameState = (Color, Board, Maybe Loc)
 
+redKingedLocations :: [Loc]
+redKingedLocations = [(1,0),(3,0),(5,0),(7,0)]
+
+blackKingedLocations :: [Loc]
+blackKingedLocations = [(0,7),(2,7),(4,7),(6,7)]
+
 
 --                                                     Print Function
 
@@ -69,13 +75,16 @@ makeMove gState move =
             False -> Nothing
             True -> Just (updateState gState move)
 
-
 updateState :: GameState -> Move -> GameState
 updateState (c, board, mLoc) move = (nextPlayer, updateBoard board move, mLoc)
     where nextPlayer = if c == Red then Black else Red
 
 updateBoard :: Board -> Move -> Board
-updateBoard board (l1, l2) = [if loc == l1 then (l2, piece) else (loc, piece) | (loc, piece) <- board]
+updateBoard board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else (loc, piece) | (loc, piece) <- board]
+
+updateClass :: Piece -> Loc -> Piece
+updateClass (color, currClass) loc = if makeKing then (color, King) else (color, currClass)
+    where makeKing = if color == Red then loc `elem` redKingedLocations else loc `elem` blackKingedLocations
 
 --Once a move is made, we will need to check whether or not that piece needs to be kinged or not.
 
