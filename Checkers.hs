@@ -115,8 +115,8 @@ justValidMoves (c, board, mLoc) =
 colorValidMoves :: GameState -> [Move]
 colorValidMoves (c, board, mLoc) = foldr (\((x,y),p) acc -> 
     let (xl2,xr2,y2) = if (c == Red) then (x-1,x+1,y-1) else (x+1,x-1,y+1) -- Puts restraints on where a noKing piece can move
-        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l]
-        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l]
+        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l] -- pieces located in left diagonal to call isCapture on
+        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l] -- pieces located in right diagonal to call isCapture on
         l3L = if (c == Red) then (x-2,y-2) else (x+2,y+2)
         l3R = if (c == Red) then (x+2,y-2) else (x-2,y+2)
     in  if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xl2,y2))] ++ [((x,y),(xr2,y2))]
