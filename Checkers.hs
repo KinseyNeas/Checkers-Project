@@ -31,6 +31,12 @@ type Board = [(Loc, Piece)]
 
 type GameState = (Color, Board, Maybe Loc)
 
+redKingedLocations :: [Loc]
+redKingedLocations = [(1,0),(3,0),(5,0),(7,0)]
+
+blackKingedLocations :: [Loc]
+blackKingedLocations = [(0,7),(2,7),(4,7),(6,7)]
+
 
 --                                                     Print Function
 
@@ -118,15 +124,33 @@ isCapture (l1,l2) (c, board, mLoc) [(m,p2)] =
 -- Once a move is confirmed to be legal, we can update the board to reflect the new Move.
 
 makeMove :: GameState -> Move -> Maybe GameState
-makeMove = undefined
+makeMove gState move = 
+    let x = isValidMove move gState
+    in case x of
+            False -> Nothing
+            True -> Just (updateState gState move)
+
+updateState :: GameState -> Move -> GameState
+updateState (c, board, mLoc) move = (nextPlayer, updateBoard board move, mLoc)
+    where nextPlayer = if c == Red then Black else Red
+
+updateBoard :: Board -> Move -> Board
+updateBoard board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else (loc, piece) | (loc, piece) <- board]
+
+updateClass :: Piece -> Loc -> Piece
+updateClass (color, currClass) loc = if makeKing then (color, King) else (color, currClass)
+    where makeKing = if color == Red then loc `elem` redKingedLocations else loc `elem` blackKingedLocations
+
+--Once a move is made, we will need to check whether or not that piece needs to be kinged or not.
 
 -- Function used to check if the game is over.
 
 checkGameOver :: GameState -> Bool
-checkGameOver = undefined
+checkGameOver (c, board, mLoc) = r == 0 || b == 0
+    where (r,b) = foldr (\(loc, (color, king)) (r,b) -> if color == Red then (r+1,b) else (r,b+1)) (0,0) board
 
 checkWinner :: GameState -> Color
-checkWinner = undefined
+checkWinner (c, ((x,y):ys), mLoc) = fst y
 
 --                                                      Extra Notes
 --
