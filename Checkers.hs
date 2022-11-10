@@ -2,6 +2,8 @@ module Checkers where
 import Data.List (sort)
 import Debug.Trace
 import Data.List
+import Data.Maybe
+--import Data.catMaybe
 
 --                                                      Type Aliases
 
@@ -52,22 +54,52 @@ printRow (b:bs) (p:ps) =
 
 
 isValidMove :: Move -> GameState -> Bool
-isValidMove (l1,l2) (c, board, mLoc) = 
-    let id2 = [(l,p)|(l,p) <- board, l2 == l]
-    in  if(fst l2 > 7 || fst l2 < 0 || snd l2 > 7 || snd l2 < 0) then False
-        else if ((c == Red && snd l2 == snd l1 - 1 )||(c == Black && snd l2 == snd l1 + 1)) then
-            if (fst l2 == (fst l1) + 1 || fst l2 == (fst l1) - 1) then
-                if (id2 == []) then True
-                else False
-            else False
-        else False
+isValidMove (loc1,loc2) (turn, board, mLoc)
+    | (moveInBounds (loc1,loc2)) && (lookUpPiece loc2 board) == Nothing =
+                case Just (col, roy) of
+                    Nothing -> False
+                    Just (turn, noKing) -> isValidnoKingMove (col, roy) (loc1,loc2) (turn, board, mLoc)
+                    Just (turn, King) -> isValidKingMove (loc1,loc2) (turn, board, mLoc)
+                    Just (_,_) -> False
+    | otherwise = False
+    where Just (col, roy) = lookUpPiece loc1 board
+
+-- Also need to check that validmove because made by player
+-- Haven't incoporated mLoc yet
+
+isValidKingMove :: Move -> GameState -> Bool
+isValidKingMove ((x1,y1),(x2,y2)) (turn, board, mLoc) = (y2 == y1 - 1 || y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
+
+isValidnoKingMove :: Piece -> Move -> GameState -> Bool
+isValidnoKingMove (color, royal) ((x1,y1),(x2,y2)) (turn, board, mLoc) =
+                case color of
+                    Red -> (y2 == y1 - 1) && (x2 == x1 + 1 || x2 == x1 - 1)
+                    Black -> (y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
+    -- let id2 = [(loc,p) | (loc,p) <- board, (x2,y2) == loc] -- This check if piece is in location
+--     if (x2 > 7 || x2 < 0 || y2 > 7 || y2 < 0) then False -- Checks that piece is within bounds of board
+--        else if ((color == Red && y2 == y1 - 1 ) || (color == Black && y2 == y1 + 1)) then -- Checks that noKing piece is moving to next line
+--            if (x2 == x1 + 1 || x2 == x1 - 1) then -- Checks that noKing piece is moving in diagonal
+--                if (lookUpPiece (x2,y2) board) == Nothing then True -- Checks that there is no piece in the loc that play wants to move to
+--                else False
+--            else False
+--       else False
+
+moveInBounds :: Move -> Bool
+moveInBounds ((x1,y1),(x2,y2)) = not (x2 > 7 || x2 < 0 || y2 > 7 || y2 < 0)
+--spaceOccupied :: Board -> Loc -> Bool
+--spaceOccupied board moveTo = foldr (\(loc,piece) retVal <- loc == moveTo || retVal) False board
+
+lookUpPiece :: Loc -> Board -> Maybe Piece
+lookUpPiece loc board = lookup loc board
+
+-- Need to add implimentation for if King
 
 validMoves :: GameState -> [Move] 
 validMoves (c, board, mLoc) = 
     if (mLoc == Nothing) then
-        colorValidMoves (c, board, mLoc)
+        colorValidMoves (c, board, mLoc) -- Just makes valid moves list
     else
-        justValidMoves (c, board, mLoc)
+        justValidMoves (c, board, mLoc) -- Takes into account if we have a maybeLoc
 
 justValidMoves :: GameState -> [Move]
 justValidMoves (c, board, mLoc) =  
@@ -90,7 +122,7 @@ justValidMoves (c, board, mLoc) =
 
 colorValidMoves :: GameState -> [Move]
 colorValidMoves (c, board, mLoc) = foldr (\((x,y),p) acc -> 
-    let (xl2,xr2,y2) = if (c == Red) then (x-1,x+1,y-1) else (x+1,x-1,y+1)
+    let (xl2,xr2,y2) = if (c == Red) then (x-1,x+1,y-1) else (x+1,x-1,y+1) -- Puts restraints on where a noKing piece can move
         idL = [(l,p)|(l,p) <- board, (xl2,y2) == l]
         idR = [(l,p)|(l,p) <- board, (xr2,y2) == l]
         l3L = if (c == Red) then (x-2,y-2) else (x+2,y+2)
