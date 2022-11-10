@@ -51,8 +51,6 @@ printRow (b:bs) (p:ps) =
 --                                                      Functions
 
 -- Checks if a move, based on the type and color of the piece, is legal.
-
-
 isValidMove :: Move -> GameState -> Bool
 isValidMove (loc1,loc2) (turn, board, mLoc)
     | (moveInBounds (loc1,loc2)) && (lookUpPiece loc2 board) == Nothing =
@@ -67,28 +65,22 @@ isValidMove (loc1,loc2) (turn, board, mLoc)
 -- Also need to check that validmove because made by player
 -- Haven't incoporated mLoc yet
 
+-- This function determines if the move being made is Vaild if the piece being moved is a King.
 isValidKingMove :: Move -> GameState -> Bool
 isValidKingMove ((x1,y1),(x2,y2)) (turn, board, mLoc) = (y2 == y1 - 1 || y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
 
+-- This function determines if the move being made is Vaild if the piece being moved is NOT a King.
 isValidnoKingMove :: Piece -> Move -> GameState -> Bool
 isValidnoKingMove (color, royal) ((x1,y1),(x2,y2)) (turn, board, mLoc) =
                 case color of
                     Red -> (y2 == y1 - 1) && (x2 == x1 + 1 || x2 == x1 - 1)
                     Black -> (y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
-    -- let id2 = [(loc,p) | (loc,p) <- board, (x2,y2) == loc] -- This check if piece is in location
---     if (x2 > 7 || x2 < 0 || y2 > 7 || y2 < 0) then False -- Checks that piece is within bounds of board
---        else if ((color == Red && y2 == y1 - 1 ) || (color == Black && y2 == y1 + 1)) then -- Checks that noKing piece is moving to next line
---            if (x2 == x1 + 1 || x2 == x1 - 1) then -- Checks that noKing piece is moving in diagonal
---                if (lookUpPiece (x2,y2) board) == Nothing then True -- Checks that there is no piece in the loc that play wants to move to
---                else False
---            else False
---       else False
 
+-- This checks that a move is made within the bounds of the board.
 moveInBounds :: Move -> Bool
 moveInBounds ((x1,y1),(x2,y2)) = not (x2 > 7 || x2 < 0 || y2 > 7 || y2 < 0)
---spaceOccupied :: Board -> Loc -> Bool
---spaceOccupied board moveTo = foldr (\(loc,piece) retVal <- loc == moveTo || retVal) False board
 
+-- This check if piece exists in location and if so, returns a Maybe Piece.
 lookUpPiece :: Loc -> Board -> Maybe Piece
 lookUpPiece loc board = lookup loc board
 
