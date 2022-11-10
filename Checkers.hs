@@ -57,19 +57,50 @@ printRow (b:bs) (p:ps) =
 --                                                      Functions
 
 -- Checks if a move, based on the type and color of the piece, is legal.
-isValidMove :: Move -> GameState -> Bool
-isValidMove (loc1,loc2) (turn, board, mLoc)
+isValidMove :: GameState -> Move -> Bool
+isValidMove (turn, board, mLoc) (loc1,loc2)
     | (moveInBounds (loc1,loc2)) && (lookUpPiece loc2 board) == Nothing =
                 case Just (col, roy) of
                     Nothing -> False
-                    Just (turn, noKing) -> isValidnoKingMove (col, roy) (loc1,loc2) (turn, board, mLoc)
-                    Just (turn, King) -> isValidKingMove (loc1,loc2) (turn, board, mLoc)
+                    Just (turn, noKing) -> captureMove || (isValidnoKingMove (col, roy) (loc1,loc2) (turn, board, mLoc))
+                    Just (turn, King) -> captureMove || (isValidKingMove (loc1,loc2) (turn, board, mLoc))
                     Just (_,_) -> False
     | otherwise = False
     where Just (col, roy) = lookUpPiece loc1 board
+          captureMove = isCapturedPiece (col, roy) (loc1,loc2) (turn, board, mLoc)
 
 -- Also need to check that validmove because made by player
 -- Haven't incoporated mLoc yet
+
+-- Determines if a move is a capture move.
+isCapturedPiece :: Piece -> Move -> GameState -> Bool
+isCapturedPiece (col, roy) ((x1,y1),(x2,y2)) (turn, board, mLoc)
+        | Just loc3 == Nothing = False
+        | otherwise =
+            case (col, roy) of
+                (turn, King) -> kingCapture && hopingOther
+                (turn, noKing) -> nokingCapture && hopingOther
+                (_, _) -> False
+        where Just loc3 = capturedPieceLoc ((x1,y1),(x2,y2))
+              Just (capCol, capRoy) = lookUpPiece loc3 board
+              hopingOther = if turn == Red then capCol == Black else capCol == Red 
+              kingCapture = abs(y2 - y1) == 2 && abs(x2 - x1) == 2
+              nokingCapture
+                    | col == Red = abs(x2 - x1) == 2 && (y1 - 2 == y2)
+                    | col == Black = abs(x2 - x1) == 2 && (y1 + 2 == y2)
+
+-- If a move is suspected to be a capture, this returns the location of the piece that would be captured.
+capturedPieceLoc :: Move -> Maybe Loc
+capturedPieceLoc ((x1,y1),(x2,y2)) = 
+    let (xdir, ydir) = (x1 - x2, y1 - y2)
+    in case (xdir, ydir) of
+            (-2, -2) -> Just (x1 + 1, y1 + 1)
+            (-2, 2) -> Just (x1 + 1, y1 - 1)
+            (2, -2) -> Just (x1 - 1, y1 + 1)
+            (2, 2) -> Just (x1 - 1, y1 - 1)
+            (_,_) -> Nothing
+-- if the piece is a King it can caputure a piece backwards, if not only forwards, need to check that the 
+-- spot trying to be captured is occupied by a piece with opposit color of person turn, and that hope is in correct direction, need to make sure place moving to is empty?
 
 -- This function determines if the move being made is Vaild if the piece being moved is a King.
 isValidKingMove :: Move -> GameState -> Bool
@@ -90,6 +121,9 @@ moveInBounds ((x1,y1),(x2,y2)) = not (x2 > 7 || x2 < 0 || y2 > 7 || y2 < 0)
 lookUpPiece :: Loc -> Board -> Maybe Piece
 lookUpPiece loc board = lookup loc board
 
+--                                ^ Above is functionality for isValidMove ^
+
+
 -- Need to add implimentation for if King
 
 validMoves :: GameState -> [Move] 
@@ -97,43 +131,51 @@ validMoves (c, board, mLoc) =
     if (mLoc == Nothing) then
         colorValidMoves (c, board, mLoc) -- Just makes valid moves list
     else
-        justValidMoves (c, board, mLoc) -- Takes into account if we have a maybeLoc
+        doubleJumpValidMoves (c, board, mLoc) -- Takes into account if we have a maybeLoc
 
-justValidMoves :: GameState -> [Move]
-justValidMoves (c, board, mLoc) =  
-    let Just (mx,my) = mLoc
-        piece = foldr (\(l,p) (a,c) -> if(a == l) then (l,p) else (a,c)) ((mx,my), (c, NoKing)) board
-        (xl2,xr2,y2) = if (fst(snd piece) == Red) then (mx-1,mx+1,my-1) else (mx+1,mx-1,my+1)
-        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l]
-        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l]
-        l3L = if (fst(snd piece) == Red) then (mx-2,my-2) else (mx+2,my+2)
-        l3R = if (fst(snd piece) == Red) then (mx+2,my-2) else (mx-2,my+2)
-    in  if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True && isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xl2,y2)),((mx,my),(xr2,y2))]
-        else if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True && isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),(xl2,y2)),((mx,my),l3R)]
-        else if (isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idL == True && isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),l3L),((mx,my),(xr2,y2))]
-        else if (isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idL == True && isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),l3L),((mx,my),l3R)]
-        else if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xl2,y2))]
-        else if (isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xr2,y2))]
-        else if (isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idL == True) then  [((mx,my),l3L)]
-        else if (isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),l3R)]
-        else []
+--justValidMoves :: GameState -> [Move]
+--justValidMoves (c, board, mLoc) =  
+--    let Just (mx,my) = mLoc
+--        piece = foldr (\(l,p) (a,c) -> if(a == l) then (l,p) else (a,c)) ((mx,my), (c, NoKing)) board
+--        (xl2,xr2,y2) = if (fst(snd piece) == Red) then (mx-1,mx+1,my-1) else (mx+1,mx-1,my+1)
+--        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l]
+--        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l]
+--        l3L = if (fst(snd piece) == Red) then (mx-2,my-2) else (mx+2,my+2)
+--        l3R = if (fst(snd piece) == Red) then (mx+2,my-2) else (mx-2,my+2)
+--    in  if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True && isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xl2,y2)),((mx,my),(xr2,y2))]
+--        else if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True && isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),(xl2,y2)),((mx,my),l3R)]
+--        else if (isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idL == True && isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),l3L),((mx,my),(xr2,y2))]
+--        else if (isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idL == True && isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),l3L),((mx,my),l3R)]
+--        else if (isValidMove ((mx,my),(xl2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xl2,y2))]
+--        else if (isValidMove ((mx,my),(xr2,y2)) (c, board, mLoc) == True) then  [((mx,my),(xr2,y2))]
+--        else if (isCapture ((mx,my),(xr2,y2)) (c, board, mLoc) idL == True) then  [((mx,my),l3L)]
+--        else if (isCapture ((mx,my),(xl2,y2)) (c, board, mLoc) idR == True) then  [((mx,my),l3R)]
+--        else []
+
+doubleJumpValidMoves :: GameState -> [Move]
+doubleJumpValidMoves (c, board, Just (x,y)) = 
+    case Just (col, roy) of
+        Nothing -> []
+        Just (c, roy) -> filter (isValidMove (c, board, Just (x,y))) unfilteredMoveLst
+    where Just (col, roy) = lookUpPiece (x,y) board
+          unfilteredMoveLst = [((x,y),(x-2,y-2)), ((x,y),(x-2,y+2)), ((x,y),(x+2,y-2)), ((x,y),(x+2,y+2))]
 
 colorValidMoves :: GameState -> [Move]
-colorValidMoves (c, board, mLoc) = foldr (\((x,y),p) acc -> 
-    let (xl2,xr2,y2) = if (c == Red) then (x-1,x+1,y-1) else (x+1,x-1,y+1) -- Puts restraints on where a noKing piece can move
-        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l] -- pieces located in left diagonal to call isCapture on
-        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l] -- pieces located in right diagonal to call isCapture on
-        l3L = if (c == Red) then (x-2,y-2) else (x+2,y+2)
-        l3R = if (c == Red) then (x+2,y-2) else (x-2,y+2)
-    in  if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xl2,y2))] ++ [((x,y),(xr2,y2))]
-        else if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),(xl2,y2))] ++ [((x,y),l3R)]
-        else if (isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idL == True && isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),(xr2,y2))]
-        else if (isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idL == True && isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),l3R)]
-        else if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xl2,y2))]
-        else if (isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xr2,y2))]
-        else if (isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idL == True && fst p == c) then acc ++ [((x,y),l3L)]
-        else if (isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3R)]
-        else acc) [] board
+colorValidMoves (c, board, mLoc) = undefined-- foldr (\((x,y),p) acc -> 
+--    let (xl2,xr2,y2) = if (c == Red) then (x-1,x+1,y-1) else (x+1,x-1,y+1) -- Puts restraints on where a noKing piece can move
+--        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l] -- pieces located in left diagonal to call isCapture on
+--        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l] -- pieces located in right diagonal to call isCapture on
+--        l3L = if (c == Red) then (x-2,y-2) else (x+2,y+2)
+--        l3R = if (c == Red) then (x+2,y-2) else (x-2,y+2)
+--    in  if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xl2,y2))] ++ [((x,y),(xr2,y2))]
+--        else if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),(xl2,y2))] ++ [((x,y),l3R)]
+--        else if (isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idL == True && isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),(xr2,y2))]
+--        else if (isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idL == True && isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3L)] ++ [((x,y),l3R)]
+--        else if (isValidMove ((x,y),(xl2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xl2,y2))]
+--        else if (isValidMove ((x,y),(xr2,y2)) (c, board, mLoc) == True && fst p == c) then acc ++ [((x,y),(xr2,y2))]
+--        else if (isCapture ((x,y),(xr2,y2)) (c, board, mLoc) idL == True && fst p == c) then acc ++ [((x,y),l3L)]
+--        else if (isCapture ((x,y),(xl2,y2)) (c, board, mLoc) idR == True && fst p == c) then acc ++ [((x,y),l3R)]
+--        else acc) [] board
 
 isCapture :: Move -> GameState -> [(Loc, Piece)] -> Bool
 isCapture (l1,l2) (c, board, mLoc) [] = False
@@ -148,20 +190,11 @@ isCapture (l1,l2) (c, board, mLoc) [(m,p2)] =
 -- Also need to check that validmove because made by player
 -- Haven't incoporated mLoc yet
 
-isValidMove :: Move -> GameState -> Bool
-isValidMove = undefined
-
-validMoves :: Move -> GameState -> [Move]
-validMoves = undefined
-
-isCapture :: Move -> GameState -> Bool
-isCapture = undefined
-
 -- Once a move is confirmed to be legal, we can update the board to reflect the new Move.
 
 makeMove :: GameState -> Move -> Maybe GameState
 makeMove gState move = 
-    let x = isValidMove move gState
+    let x = isValidMove gState move
     in case x of
             False -> Nothing
             True -> Just (updateState gState move)
