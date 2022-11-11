@@ -159,9 +159,10 @@ colorValidMoves gs@(c, board, mLoc) = filter (isValidMove gs) allMovesLst
     where allMovesLst = concat [allPossibleMoves (l,(col,roy)) | (l,(col,roy)) <- board, col == c]
 
 allPossibleMoves :: (Loc, Piece) -> [Move]
-allPossibleMoves ((x,y), (col,King)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-1,y+1)),((x,y),(x+1,y+1))]
-allPossibleMoves ((x,y), (Red,noKing)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1))]
-allPossibleMoves ((x,y), (Black,noKing)) = [((x,y),(x-1,y+1)),((x,y),(x+1,y+1))]
+allPossibleMoves ((x,y), (col,King)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-1,y+1)),((x,y),(x+1,y+1)),
+                                        ((x,y),(x-2,y-2)),((x,y),(x+2,y-2)),((x,y),(x-2,y+2)),((x,y),(x+2,y+2))]
+allPossibleMoves ((x,y), (Red,noKing)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-2,y-2)),((x,y),(x+2,y-2))]
+allPossibleMoves ((x,y), (Black,noKing)) = [((x,y),(x-1,y+1)),((x,y),(x+1,y+1)),((x,y),(x-2,y+2)),((x,y),(x+2,y+2))]
 --allPossibleMoves ((x,y), (col,King)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-1,y+1)),((x,y),(x+1,y+1))]
 -- foldr (\((x,y),p) acc -> 
 --    let (xl2,xr2,y2) = if (c == Red) then (x-1,x+1,y-1) else (x+1,x-1,y+1) -- Puts restraints on where a noKing piece can move
