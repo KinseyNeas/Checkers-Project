@@ -66,7 +66,7 @@ isValidMove gs@(turn, board, Nothing) move@(loc1,loc2)
 --                        Just (_,_) -> False
 
 isValidMove gs@(turn, board, mLoc) move@(loc1,loc2)
-    | not (moveInBounds move) || not ((lookup loc2 board) == Nothing) || not (colorOfLoc board loc1 == turn) || not (mLoc == Just loc1) = False
+    | not (moveInBounds move) || not (lookup loc2 board == Nothing) || not (colorOfLoc board loc1 == turn) || not (mLoc == Just loc1) = False
     | otherwise = case lookup loc1 board of
                         Just (turn, _) -> isCapturedPiece move gs
 --                        Just (_,_) -> False
