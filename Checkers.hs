@@ -59,17 +59,17 @@ printRow (b:bs) (p:ps) =
 -- Checks if a move is legal.
 isValidMove :: GameState -> Move -> Bool
 isValidMove gs@(turn, board, Nothing) move@(loc1,loc2)
-    | not (moveInBounds move) && not (lookup loc2 board == Nothing) && not (colorOfLoc board loc1 == turn) = False
+    | not (moveInBounds move) || not (lookup loc2 board == Nothing) || not (colorOfLoc board loc1 == turn) = False
     | otherwise = case lookup loc1 board of
                         Nothing -> False
                         Just (turn, _) -> isCapturedPiece move gs || isValidMoveMath move gs
-                        Just (_,_) -> False
+--                        Just (_,_) -> False
 
 isValidMove gs@(turn, board, mLoc) move@(loc1,loc2)
-    | not (moveInBounds move) && not ((lookup loc2 board) == Nothing) && not (colorOfLoc board loc1 == turn) && not (mLoc == loc1) = False
+    | not (moveInBounds move) || not ((lookup loc2 board) == Nothing) || not (colorOfLoc board loc1 == turn) || not (mLoc == Just loc1) = False
     | otherwise = case lookup loc1 board of
                         Just (turn, _) -> isCapturedPiece move gs
-                        Just (_,_) -> False
+--                        Just (_,_) -> False
 
 
 --                                            Helper Functions for isValidMove 
@@ -79,34 +79,36 @@ colorOfLoc board loc = c
     where ((c,r):cs) = [piece | (ploc,piece) <- board, ploc == loc]
 
 isCapturedPiece :: Move -> GameState -> Bool
-isCapturedPiece gs@(turn, board, mLoc) move@((x1,y1),(x2,y2))
+isCapturedPiece move@((x1,y1),(x2,y2)) gs@(turn, board, mLoc)
         | not $ isCapture move = False
         | otherwise = case lookup loc3 board of
                             Nothing -> False
-                            (turn, _) -> False
-                            (_,_) -> case lookup (x1,y1) board of
-                                    Just (turn,King) -> True
-                                    Just (turn,noKing) -> nokingCapture
-                                    Just (_,_) -> False
+                            Just (turn, _) -> False
+                            Just (_,_) -> case lookup (x1,y1) board of
+                                            Just (turn, King) -> True
+                                            Just (turn, noKing) -> nokingCapture turn
+--                                            Just (_,_) -> False
         where loc3 = capturedPieceLoc move
-              nokingCapture
+              nokingCapture :: Color -> Bool
+              nokingCapture col
                     | col == Red = (y1 - 2 == y2)
                     | col == Black = (y1 + 2 == y2)
 
+-- Basic test to determine if a move is a capture move or not.
 isCapture :: Move -> Bool
-isCapture ((x1,y1),(x2,y2)) =  (abs $ y2 - y1) == 2 && (abs $ x2 - x1) == 2
+isCapture ((x1,y1),(x2,y2)) = (abs $ y2 - y1) == 2 && (abs $ x2 - x1) == 2
 
 -- If a move is suspected to be a capture, this returns the location of the piece that would be captured.
 capturedPieceLoc :: Move -> Loc
 capturedPieceLoc ((x1,y1),(x2,y2)) = ((x1 + x2) `div` 2, (y1 + y2) `div` 2)
 
--- This function determines if the move being made is Vaild.
+-- This function determines if the move being made is vaild based on class and color.
 isValidMoveMath :: Move -> GameState -> Bool
 isValidMoveMath ((x1,y1),(x2,y2)) (turn, board, mLoc) =
                 case lookup (x1,y1) board of
+                    Just (_, King) -> (y2 == y1 - 1 || y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
                     Just (Red, noKing) -> (y2 == y1 - 1) && (x2 == x1 + 1 || x2 == x1 - 1)
                     Just (Black, noKing) -> (y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
-                    Just (_, King) -> (y2 == y1 - 1 || y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
 
 -- This checks that a move is made within the bounds of the board.
 moveInBounds :: Move -> Bool
@@ -120,10 +122,9 @@ moveInBounds ((x1,y1),(x2,y2)) = not (x2 > 7 || x2 < 0 || y2 > 7 || y2 < 0)
 
 validMoves :: GameState -> [Move] 
 validMoves gs@(c, board, mLoc) = 
-    if (mLoc == Nothing) then
-        colorValidMoves gs -- Just makes valid moves list
-    else
-        doubleJumpValidMoves gs -- Takes into account if we have a maybeLoc
+                case mLoc of
+                    Nothing -> colorValidMoves gs -- Just makes valid moves list
+                    Just loc -> doubleJumpValidMoves gs -- Takes into account if we have a maybeLoc
 
 --justValidMoves :: GameState -> [Move]
 --justValidMoves (c, board, mLoc) =  
@@ -145,16 +146,24 @@ validMoves gs@(c, board, mLoc) =
 --        else []
 
 doubleJumpValidMoves :: GameState -> [Move]
-doubleJumpValidMoves gs@(c, board, mLoc) = 
-    case lookup mLoc board of
+doubleJumpValidMoves gs@(c, board, Just (x,y)) = 
+    case lookup (x,y) board of
             Nothing -> []
             Just (c, roy) -> filter (isValidMove gs) unfilteredMoveLst
     where unfilteredMoveLst = [((x,y),(x-2,y-2)), ((x,y),(x-2,y+2)), ((x,y),(x+2,y-2)), ((x,y),(x+2,y+2))]
 
--- should I do isCapturePiece instead of is ValidMove? No cause validmoves takes that into account
+-- should I do isCapturePiece instead of is ValidMove? No cause validmoves takes mLoc into account
 
 colorValidMoves :: GameState -> [Move]
-colorValidMoves (c, board, mLoc) = undefined-- foldr (\((x,y),p) acc -> 
+colorValidMoves gs@(c, board, mLoc) = filter (isValidMove gs) allMovesLst
+    where allMovesLst = concat [allPossibleMoves (l,(col,roy)) | (l,(col,roy)) <- board, col == c]
+
+allPossibleMoves :: (Loc, Piece) -> [Move]
+allPossibleMoves ((x,y), (col,King)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-1,y+1)),((x,y),(x+1,y+1))]
+allPossibleMoves ((x,y), (Red,noKing)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1))]
+allPossibleMoves ((x,y), (Black,noKing)) = [((x,y),(x-1,y+1)),((x,y),(x+1,y+1))]
+--allPossibleMoves ((x,y), (col,King)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-1,y+1)),((x,y),(x+1,y+1))]
+-- foldr (\((x,y),p) acc -> 
 --    let (xl2,xr2,y2) = if (c == Red) then (x-1,x+1,y-1) else (x+1,x-1,y+1) -- Puts restraints on where a noKing piece can move
 --        idL = [(l,p)|(l,p) <- board, (xl2,y2) == l] -- pieces located in left diagonal to call isCapture on
 --        idR = [(l,p)|(l,p) <- board, (xr2,y2) == l] -- pieces located in right diagonal to call isCapture on
@@ -193,7 +202,9 @@ makeMove gState move =
             True -> Just (updateState gState move)
 
 updateState :: GameState -> Move -> GameState
-updateState (c, board, mLoc) move = (nextPlayer, updateBoard board move, mLoc)
+updateState gs@(c, board, mLoc) move@(loc1,loc2) 
+    | isCapturedPiece move gs = (c, updateBoard board move, Just loc2)
+    | otherwise = (nextPlayer, updateBoard board move, Nothing)
     where nextPlayer = if c == Red then Black else Red
 
 updateBoard :: Board -> Move -> Board
