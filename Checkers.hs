@@ -144,7 +144,7 @@ allPossibleMoves ((x,y), (Black,noKing)) = [((x,y),(x-1,y+1)),((x,y),(x+1,y+1)),
 -- makeMove checks that a move is valid and then returns the resulting GameState
 makeMove :: GameState -> Move -> Maybe GameState
 makeMove gState move = 
-    let x = isValidMove gState move
+    let x = isValidMove move gState
     in case x of
             False -> Nothing
             True -> Just (updateState gState move)
@@ -165,6 +165,20 @@ updateBoard board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else 
 updateClass :: Piece -> Loc -> Piece
 updateClass (color, currClass) loc = if makeKing then (color, King) else (color, currClass)
     where makeKing = if color == Red then loc `elem` redKingedLocations else loc `elem` blackKingedLocations
+
+updateState :: GameState -> Move -> GameState
+updateState (c, board, mLoc) move = (nextPlayer, updateBoard board move, mLoc)
+    where nextPlayer = if c == Red then Black else Red
+
+updateBoard :: Board -> Move -> Board
+updateBoard board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else (loc, piece) | (loc, piece) <- board]
+
+updateClass :: Piece -> Loc -> Piece
+updateClass (color, currClass) loc = if makeKing then (color, King) else (color, currClass)
+    where makeKing = if color == Red then loc `elem` redKingedLocations else loc `elem` blackKingedLocations
+
+--Once a move is made, we will need to check whether or not that piece needs to be kinged or not.
+
 
 -- Function used to check if the game is over.
 checkGameOver :: GameState -> Bool
