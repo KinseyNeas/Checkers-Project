@@ -152,16 +152,31 @@ makeMove gState move =
             True -> Just (updateState gState move)
 
 -- Updates the state, and updates mLoc based on whether the move is a capture.
+-- Double jumps are forced.
 updateState :: GameState -> Move -> GameState
 updateState gs@(c, board, mLoc) move@(loc1,loc2) 
-    | isCapturedPiece move gs = (c, updateBoard board move, Just loc2)
-    | otherwise = (nextPlayer, updateBoard board move, Nothing)
+    | isCapturedPiece move gs = (c, updatedCapBoard, canDoubleJump (c, updatedCapBoard, Just loc2))
+    | otherwise = (nextPlayer, updatePiece board move, Nothing)
     where nextPlayer = if c == Red then Black else Red
+          updatedCapBoard = updateCapturePiece board move
+
+canDoubleJump :: GameState -> Maybe Loc
+canDoubleJump gs@(c, board, loc2) = 
+    case validMoves gs of
+            [] -> Nothing
+            lst -> loc2
+
+updateCapturePiece :: Board -> Move -> Board
+updateCapturePiece board move = removePiece (updatePiece board move) move
+
+removePiece :: Board -> Move -> Board
+removePiece board move = [(loc, piece) | (loc, piece) <- board, loc /= capturedPiece]
+    where capturedPiece = capturedPieceLoc move
 
 -- Updates the board assuming the move is valid.
 -- Need to remove middle piece if move is capture... !!!
-updateBoard :: Board -> Move -> Board
-updateBoard board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else (loc, piece) | (loc, piece) <- board]
+updatePiece :: Board -> Move -> Board
+updatePiece board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else (loc, piece) | (loc, piece) <- board]
 
 -- Determines if a piece's royalty needs to be updated.
 updateClass :: Piece -> Loc -> Piece
