@@ -5,7 +5,10 @@ module Solver
 where
 import Checkers
 
-whoWillWin 
+data Outcome = RedWin | BlackWin | Tie
+
+whoWillWin :: GameState -> Outcome
+whoWillWin gs@(c, board, mLoc, ct) = 
 
 bestMove :: GameState -> Move
 bestMove 
