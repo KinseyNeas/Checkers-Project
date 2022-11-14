@@ -36,48 +36,50 @@ type Count = Int    --Count is the game's turn counter.
 
 type GameState = (Color, Board, Maybe Loc, Count)
 
-redKingedLocations :: [Loc]
-redKingedLocations = [(1,0),(3,0),(5,0),(7,0)]
-
-blackKingedLocations :: [Loc]
-blackKingedLocations = [(0,7),(2,7),(4,7),(6,7)]
+shouldKingify :: Color -> Loc -> Bool
+shouldKingify Red loc = loc `elem` [(1,0),(3,0),(5,0),(7,0)] 
+shouldKingify Black loc = loc `elem` [(0,7),(2,7),(4,7),(6,7)]
 
 
 --                                                     Print Function
 
 -- Instances of show so that player can see board and pieces.
 
-printBoard :: GameState -> [String]
-printBoard (c,board,mLoc, ct) = [printRow board [(x,y)|x <- [0..7]] |y <- [0..7]] --(zip [0..7] y)
+printBoard :: GameState -> [String] --done in individual cells
+printBoard (c,board,Nothing,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn"]
+printBoard (c,board,Just l,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn", "previously moved piece: " ++ show l]
 
-printRow :: Board -> [Loc] -> String
-printRow _ [] = ""
-printRow [] (p:ps) = "_ " ++ printRow [] ps
-printRow (b:bs) (p:ps) = 
-    if (fst b == p) then show (fst (snd b))++ " " ++ printRow bs ps
-    else if (snd (fst b) /= snd p) then "_ " ++ printRow bs ps
-    else "_ " ++ printRow (b:bs) ps
+printCell :: Board -> Loc -> String
+printCell [] _ = "_ "
+printCell bLst l = 
+    case lookup l bLst of
+        Just (cr,cl) -> show cr ++ " "
+        Nothing -> "_ "
 --                                                      Functions
 
 -- Checks if a move is legal.
 isValidMove :: GameState -> Move -> Bool
 isValidMove gs@(turn, board, Nothing, ct) move@(loc1,loc2)
-    | not (moveInBounds move) || not (lookup loc2 board == Nothing) || not (colorOfLoc board loc1 == turn) = False
-    | otherwise = case lookup loc1 board of
-                        Nothing -> False
-                        Just (color1, _) -> color1 == turn && (isCapturedPiece move gs || isValidMoveMath move gs)
+    | not (moveInBounds move) 
+    || not (lookup loc2 board == Nothing) 
+    || not (colorOfLoc board loc1 == Just turn) = False
+    | otherwise = isCapturedPiece move gs || isValidDirection move gs
 
 isValidMove gs@(turn, board, mLoc, ct) move@(loc1,loc2)
-    | not (moveInBounds move) || not (lookup loc2 board == Nothing) || not (colorOfLoc board loc1 == turn) || not (mLoc == Just loc1) = False
-    | otherwise = case lookup loc1 board of
-                        Just (color1, _) -> color1 == turn && isCapturedPiece move gs
+    | not (moveInBounds move) 
+    || not (lookup loc2 board == Nothing) 
+    || not (colorOfLoc board loc1 == Just turn) 
+    || not (mLoc == Just loc1) = False
+    | otherwise = isCapturedPiece move gs
 
 
 --                                            Helper Functions for isValidMove 
 
-colorOfLoc :: Board -> Loc -> Color
-colorOfLoc board loc = c
-    where ((c,r):cs) = [piece | (ploc,piece) <- board, ploc == loc]
+colorOfLoc :: Board -> Loc -> Maybe Color
+colorOfLoc board loc = 
+        case lookup loc board of
+            Nothing -> Nothing
+            Just (c,roy) -> Just c
 
 isCapturedPiece :: Move -> GameState -> Bool
 isCapturedPiece move@((x1,y1),(x2,y2)) gs@(turn, board, mLoc, ct)
@@ -86,7 +88,7 @@ isCapturedPiece move@((x1,y1),(x2,y2)) gs@(turn, board, mLoc, ct)
                            (Nothing, _) -> False
                            (_, Nothing) -> False
                            (Just (color1, King), Just (color3, _)) -> color1 /= color3  && color1 == turn 
-                           (Just (color1, noKing), Just (color3, _)) -> color1 /= color3 && color1 == turn && nokingCapture turn
+                           (Just (color1, NoKing), Just (color3, _)) -> color1 /= color3 && color1 == turn && nokingCapture turn
         where loc3 = capturedPieceLoc move
               nokingCapture :: Color -> Bool
               nokingCapture col
@@ -102,12 +104,12 @@ capturedPieceLoc :: Move -> Loc
 capturedPieceLoc ((x1,y1),(x2,y2)) = ((x1 + x2) `div` 2, (y1 + y2) `div` 2)
 
 -- This function determines if the move being made is vaild based on class and color.
-isValidMoveMath :: Move -> GameState -> Bool
-isValidMoveMath ((x1,y1),(x2,y2)) (turn, board, mLoc, ct) =
+isValidDirection :: Move -> GameState -> Bool
+isValidDirection ((x1,y1),(x2,y2)) (turn, board, mLoc, ct) =
                 case lookup (x1,y1) board of
                     Just (_, King) -> (y2 == y1 - 1 || y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
-                    Just (Red, noKing) -> (y2 == y1 - 1) && (x2 == x1 + 1 || x2 == x1 - 1)
-                    Just (Black, noKing) -> (y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
+                    Just (Red, NoKing) -> (y2 == y1 - 1) && (x2 == x1 + 1 || x2 == x1 - 1)
+                    Just (Black, NoKing) -> (y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
 
 -- This checks that a move is made within the bounds of the board.
 moveInBounds :: Move -> Bool
@@ -141,52 +143,59 @@ colorValidMoves gs@(c, board, mLoc, ct) = filter (isValidMove gs) allMovesLst
 allPossibleMoves :: (Loc, Piece) -> [Move]
 allPossibleMoves ((x,y), (col,King)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-1,y+1)),((x,y),(x+1,y+1)),
                                         ((x,y),(x-2,y-2)),((x,y),(x+2,y-2)),((x,y),(x-2,y+2)),((x,y),(x+2,y+2))]
-allPossibleMoves ((x,y), (Red,noKing)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-2,y-2)),((x,y),(x+2,y-2))]
-allPossibleMoves ((x,y), (Black,noKing)) = [((x,y),(x-1,y+1)),((x,y),(x+1,y+1)),((x,y),(x-2,y+2)),((x,y),(x+2,y+2))]
+allPossibleMoves ((x,y), (Red,NoKing)) = [((x,y),(x-1,y-1)),((x,y),(x+1,y-1)),((x,y),(x-2,y-2)),((x,y),(x+2,y-2))]
+allPossibleMoves ((x,y), (Black,NoKing)) = [((x,y),(x-1,y+1)),((x,y),(x+1,y+1)),((x,y),(x-2,y+2)),((x,y),(x+2,y+2))]
 
 -- makeMove checks that a move is valid and then returns the resulting GameState
 makeMove :: GameState -> Move -> Maybe GameState
 makeMove gState move = 
-    let x = isValidMove move gState
+    let x = isValidMove gState move
     in case x of
             False -> Nothing
             True -> Just (updateState gState move)
 
 -- Updates the state, and updates mLoc based on whether the move is a capture.
+-- Double jumps are forced.
 updateState :: GameState -> Move -> GameState
 updateState gs@(c, board, mLoc, ct) move@(loc1,loc2) 
-    | isCapturedPiece move gs = (c, updateBoard board move, Just loc2, ct)
-    | otherwise = (nextPlayer, updateBoard board move, Nothing, ct)
+    | isCapturedPiece move gs = (c, updatedCapBoard, canDoubleJump (c, updatedCapBoard, Just loc2), ct)
+    | otherwise = (nextPlayer, updatePiece board move, Nothing, ct)
     where nextPlayer = if c == Red then Black else Red
+          updatedCapBoard = updateCapturePiece board move
+
+canDoubleJump :: GameState -> Maybe Loc
+canDoubleJump gs@(c, board, loc2) = 
+    case validMoves gs of
+            [] -> Nothing
+            lst -> loc2
+
+updateCapturePiece :: Board -> Move -> Board
+updateCapturePiece board move = removePiece (updatePiece board move) move
+
+removePiece :: Board -> Move -> Board
+removePiece board move = [(loc, piece) | (loc, piece) <- board, loc /= capturedPiece]
+    where capturedPiece = capturedPieceLoc move
+
 
 -- Updates the board assuming the move is valid.
 -- Need to remove middle piece if move is capture... !!!
-updateBoard :: Board -> Move -> Board
-updateBoard board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else (loc, piece) | (loc, piece) <- board]
+updatePiece :: Board -> Move -> Board
+updatePiece board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else (loc, piece) | (loc, piece) <- board]
 
 -- Determines if a piece's royalty needs to be updated.
 updateClass :: Piece -> Loc -> Piece
-updateClass (color, currClass) loc = if makeKing then (color, King) else (color, currClass)
-    where makeKing = if color == Red then loc `elem` redKingedLocations else loc `elem` blackKingedLocations
-
-updateState :: GameState -> Move -> GameState
-updateState (c, board, mLoc, ct) move = (nextPlayer, updateBoard board move, mLoc, ct)
-    where nextPlayer = if c == Red then Black else Red
-
-updateBoard :: Board -> Move -> Board
-updateBoard board (l1, l2) = [if loc == l1 then (l2, updateClass piece l2) else (loc, piece) | (loc, piece) <- board]
-
-updateClass :: Piece -> Loc -> Piece
-updateClass (color, currClass) loc = if makeKing then (color, King) else (color, currClass)
-    where makeKing = if color == Red then loc `elem` redKingedLocations else loc `elem` blackKingedLocations
-
+updateClass (color, currClass) loc
+            | shouldKingify color loc = (color, King) 
+            | otherwise = (color, currClass)
 --Once a move is made, we will need to check whether or not that piece needs to be kinged or not.
 
 
 -- Function used to check if the game is over.
 checkGameOver :: GameState -> Bool
 checkGameOver (c, board, mLoc, ct) = r == 0 || b == 0
-    where (r,b) = foldr (\(loc, (color, king)) (r,b) -> if color == Red then (r+1,b) else (r,b+1)) (0,0) board
+    where (r,b) = foldr countFunc (0,0) board
+          countFunc (loc, (Red, king)) (r,b) = (r+1,b)
+          countFunc (loc, (Black, king)) (r,b) = (r,b+1)
 
 -- Checks the wimmer assuming the game is over.
 checkWinner :: GameState -> Color
