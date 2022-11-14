@@ -42,16 +42,16 @@ shouldKingify Black loc = loc `elem` [(0,7),(2,7),(4,7),(6,7)]
 
 -- Instances of show so that player can see board and pieces.
 
-printBoard :: GameState -> [String]
-printBoard (c,board,mLoc) = [printRow board [(x,y)|x <- [0..7]] |y <- [0..7]] --(zip [0..7] y)
+printBoard :: GameState -> [String] --done in individual cells
+printBoard (c,board,Nothing) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn"]
+printBoard (c,board,Just l) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn", "previously moved piece: " ++ show l]
 
-printRow :: Board -> [Loc] -> String
-printRow _ [] = ""
-printRow [] (p:ps) = "_ " ++ printRow [] ps
-printRow (b:bs) (p:ps) = 
-    if (fst b == p) then show (fst (snd b))++ " " ++ printRow bs ps
-    else if (snd (fst b) /= snd p) then "_ " ++ printRow bs ps
-    else "_ " ++ printRow (b:bs) ps
+printCell :: Board -> Loc -> String
+printCell [] _ = "_ "
+printCell bLst l = 
+    case lookup l bLst of
+        Just (cr,cl) -> show cr ++ " "
+        Nothing -> "_ "
 --                                                      Functions
 
 -- Checks if a move is legal.
