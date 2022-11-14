@@ -3,6 +3,7 @@ import Data.List (sort)
 import Debug.Trace
 import Data.List
 import Data.Maybe
+import Solver
 --import Data.catMaybe
 
 --                                                      Type Aliases
@@ -31,7 +32,9 @@ type Move = (Loc,Loc)
 
 type Board = [(Loc, Piece)]
 
-type GameState = (Color, Board, Maybe Loc)
+type Count = Int    --Count is the game's turn counter. 
+
+type GameState = (Color, Board, Maybe Loc, Count)
 
 shouldKingify :: Color -> Loc -> Bool
 shouldKingify Red loc = loc `elem` [(1,0),(3,0),(5,0),(7,0)] 
@@ -43,8 +46,8 @@ shouldKingify Black loc = loc `elem` [(0,7),(2,7),(4,7),(6,7)]
 -- Instances of show so that player can see board and pieces.
 
 printBoard :: GameState -> [String] --done in individual cells
-printBoard (c,board,Nothing) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn"]
-printBoard (c,board,Just l) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn", "previously moved piece: " ++ show l]
+printBoard (c,board,Nothing,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn"]
+printBoard (c,board,Just l,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn", "previously moved piece: " ++ show l]
 
 printCell :: Board -> Loc -> String
 printCell [] _ = "_ "
@@ -56,13 +59,13 @@ printCell bLst l =
 
 -- Checks if a move is legal.
 isValidMove :: GameState -> Move -> Bool
-isValidMove gs@(turn, board, Nothing) move@(loc1,loc2)
+isValidMove gs@(turn, board, Nothing, ct) move@(loc1,loc2)
     | not (moveInBounds move) 
     || not (lookup loc2 board == Nothing) 
     || not (colorOfLoc board loc1 == Just turn) = False
     | otherwise = isCapturedPiece move gs || isValidDirection move gs
 
-isValidMove gs@(turn, board, mLoc) move@(loc1,loc2)
+isValidMove gs@(turn, board, mLoc, ct) move@(loc1,loc2)
     | not (moveInBounds move) 
     || not (lookup loc2 board == Nothing) 
     || not (colorOfLoc board loc1 == Just turn) 
@@ -79,7 +82,7 @@ colorOfLoc board loc =
             Just (c,roy) -> Just c
 
 isCapturedPiece :: Move -> GameState -> Bool
-isCapturedPiece move@((x1,y1),(x2,y2)) gs@(turn, board, mLoc)
+isCapturedPiece move@((x1,y1),(x2,y2)) gs@(turn, board, mLoc, ct)
         | not $ isCapture move = False
         | otherwise = case (lookup (x1,y1) board, lookup loc3 board) of -- tuple of piece @ loc1 and piece @ loc3
                            (Nothing, _) -> False
@@ -102,7 +105,7 @@ capturedPieceLoc ((x1,y1),(x2,y2)) = ((x1 + x2) `div` 2, (y1 + y2) `div` 2)
 
 -- This function determines if the move being made is vaild based on class and color.
 isValidDirection :: Move -> GameState -> Bool
-isValidDirection ((x1,y1),(x2,y2)) (turn, board, mLoc) =
+isValidDirection ((x1,y1),(x2,y2)) (turn, board, mLoc, ct) =
                 case lookup (x1,y1) board of
                     Just (_, King) -> (y2 == y1 - 1 || y2 == y1 + 1) && (x2 == x1 + 1 || x2 == x1 - 1)
                     Just (Red, NoKing) -> (y2 == y1 - 1) && (x2 == x1 + 1 || x2 == x1 - 1)
@@ -118,14 +121,14 @@ moveInBounds ((x1,y1),(x2,y2)) = not (x2 > 7 || x2 < 0 || y2 > 7 || y2 < 0)
 
 -- Determines all the valid moves for a game state
 validMoves :: GameState -> [Move] 
-validMoves gs@(c, board, mLoc) = 
+validMoves gs@(c, board, mLoc, ct) = 
                 case mLoc of
                     Nothing -> colorValidMoves gs -- Just makes valid moves list
                     Just loc -> doubleJumpValidMoves gs -- Takes into account if we have a maybeLoc
 
 -- If mLoc exists, this determines all the moves that can be made by the piece located at mLoc.
 doubleJumpValidMoves :: GameState -> [Move]
-doubleJumpValidMoves gs@(c, board, Just (x,y)) = 
+doubleJumpValidMoves gs@(c, board, Just (x,y), ct) = 
     case lookup (x,y) board of
             Nothing -> []
             Just (c, roy) -> filter (isValidMove gs) unfilteredMoveLst
@@ -133,7 +136,7 @@ doubleJumpValidMoves gs@(c, board, Just (x,y)) =
 
 -- Determines all of the valid moves that can be made the pieces in a specific gamestate.
 colorValidMoves :: GameState -> [Move]
-colorValidMoves gs@(c, board, mLoc) = filter (isValidMove gs) allMovesLst
+colorValidMoves gs@(c, board, mLoc, ct) = filter (isValidMove gs) allMovesLst
     where allMovesLst = concat [allPossibleMoves (l,(col,roy)) | (l,(col,roy)) <- board, col == c]
 
 -- Create all possible moves that could be made by one piece.
@@ -154,9 +157,9 @@ makeMove gState move =
 -- Updates the state, and updates mLoc based on whether the move is a capture.
 -- Double jumps are forced.
 updateState :: GameState -> Move -> GameState
-updateState gs@(c, board, mLoc) move@(loc1,loc2) 
-    | isCapturedPiece move gs = (c, updatedCapBoard, canDoubleJump (c, updatedCapBoard, Just loc2))
-    | otherwise = (nextPlayer, updatePiece board move, Nothing)
+updateState gs@(c, board, mLoc, ct) move@(loc1,loc2) 
+    | isCapturedPiece move gs = (c, updatedCapBoard, canDoubleJump (c, updatedCapBoard, Just loc2), ct)
+    | otherwise = (nextPlayer, updatePiece board move, Nothing, ct)
     where nextPlayer = if c == Red then Black else Red
           updatedCapBoard = updateCapturePiece board move
 
@@ -173,6 +176,7 @@ removePiece :: Board -> Move -> Board
 removePiece board move = [(loc, piece) | (loc, piece) <- board, loc /= capturedPiece]
     where capturedPiece = capturedPieceLoc move
 
+
 -- Updates the board assuming the move is valid.
 -- Need to remove middle piece if move is capture... !!!
 updatePiece :: Board -> Move -> Board
@@ -188,14 +192,17 @@ updateClass (color, currClass) loc
 
 -- Function used to check if the game is over.
 checkGameOver :: GameState -> Bool
-checkGameOver (c, board, mLoc) = r == 0 || b == 0
+checkGameOver (c, board, mLoc, ct) = r == 0 || b == 0
     where (r,b) = foldr countFunc (0,0) board
           countFunc (loc, (Red, king)) (r,b) = (r+1,b)
           countFunc (loc, (Black, king)) (r,b) = (r,b+1)
 
 -- Checks the wimmer assuming the game is over.
 checkWinner :: GameState -> Color
-checkWinner (c, ((x,y):ys), mLoc) = fst y
+checkWinner (c, ((x,y):ys), mLoc, ct) = fst y
+
+whoHasWon :: GameState -> Maybe Outcome
+whoHasWon gs@(c, board, mLoc, ct) = undefined
 
 --                                                      Extra Notes
 --
