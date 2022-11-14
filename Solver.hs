@@ -5,6 +5,8 @@ module Solver
 where
 import Checkers
 
+whoWillWin 
+
 bestMove :: GameState -> Move
 bestMove 
 
