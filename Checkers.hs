@@ -51,8 +51,8 @@ showPiece (Black,King) = " BR "
 showPiece (Black,NoKing) = " B  "
 
 printBoard :: GameState -> [String] --done in individual cells
-printBoard (c,board,Nothing,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn"]
-printBoard (c,board,Just l,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn", "previously moved piece: " ++ show l]
+printBoard (c,board,Nothing,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn", "number of turns left: " ++ show ct]
+printBoard (c,board,Just l,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn", "number of turns left: " ++ show ct , "previously moved piece: " ++ show l]
 
 printCell :: Board -> Loc -> String
 printCell [] _ = " __ "
