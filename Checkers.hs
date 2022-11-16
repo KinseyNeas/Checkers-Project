@@ -20,6 +20,8 @@ data Color = Red | Black deriving (Show, Eq)
 
 data Class = NoKing | King deriving (Show, Eq)
 
+data Outcome = RedWin | BlackWin | Tie
+
 -- This type contains a move. The first integer in the tuple is the location of the 
 -- checker and the second integer is the location the player wants to move their piece.
 
@@ -34,6 +36,8 @@ type Board = [(Loc, Piece)]
 type Count = Int    --Count is the game's turn counter. 
 
 type GameState = (Color, Board, Maybe Loc, Count)
+
+
 
 shouldKingify :: Color -> Loc -> Bool
 shouldKingify Red loc = loc `elem` [(1,0),(3,0),(5,0),(7,0)] 
@@ -203,8 +207,19 @@ checkGameOver (c, board, mLoc, ct) = r == 0 || b == 0
           countFunc (loc, (Black, king)) (r,b) = (r,b+1)
 
 -- Checks the wimmer assuming the game is over.
-checkWinner :: GameState -> Color
-checkWinner (c, ((x,y):ys), mLoc, ct) = fst y
+--data Outcome = RedWin | BlackWin | Tie
+
+getWinner :: GameState -> Outcome
+getWinner (c, ((x,y):ys), mLoc, ct) = 
+    case fst y of 
+        Red -> RedWin
+        Black -> BlackWin
+
+gameStatus :: GameState -> Maybe Outcome
+gameStatus gs@(c, board, mLoc, ct)
+    | ct == 0 = Just Tie
+    | checkGameOver gs = Just (getWinner gs)
+    | otherwise = Nothing
 
 --whoHasWon :: GameState -> Maybe Outcome
 --whoHasWon gs@(c, board, mLoc, ct) = undefined
