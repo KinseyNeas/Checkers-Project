@@ -3,7 +3,6 @@ import Data.List (sort)
 import Debug.Trace
 import Data.List
 import Data.Maybe
-import Solver
 --import Data.catMaybe
 
 --                                                      Type Aliases
@@ -45,16 +44,22 @@ shouldKingify Black loc = loc `elem` [(0,7),(2,7),(4,7),(6,7)]
 
 -- Instances of show so that player can see board and pieces.
 
+showPiece :: Piece -> String
+showPiece (Red,King) = " RK "
+showPiece (Red,NoKing) = " R  "
+showPiece (Black,King) = " BR "
+showPiece (Black,NoKing) = " B  "
+
 printBoard :: GameState -> [String] --done in individual cells
 printBoard (c,board,Nothing,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn"]
 printBoard (c,board,Just l,ct) = [concat [printCell board (x,y)|x <- [0..7]] |y <- [0..7]] ++ [show c ++ "'s turn", "previously moved piece: " ++ show l]
 
 printCell :: Board -> Loc -> String
-printCell [] _ = "_ "
+printCell [] _ = " __ "
 printCell bLst l = 
     case lookup l bLst of
-        Just (cr,cl) -> show cr ++ " "
-        Nothing -> "_ "
+        Just loc -> showPiece loc
+        Nothing -> " __ "
 --                                                      Functions
 
 -- Checks if a move is legal.
@@ -158,13 +163,13 @@ makeMove gState move =
 -- Double jumps are forced.
 updateState :: GameState -> Move -> GameState
 updateState gs@(c, board, mLoc, ct) move@(loc1,loc2) 
-    | isCapturedPiece move gs = (c, updatedCapBoard, canDoubleJump (c, updatedCapBoard, Just loc2), ct)
+    | isCapturedPiece move gs = (c, updatedCapBoard, canDoubleJump (c, updatedCapBoard, Just loc2, ct), ct)
     | otherwise = (nextPlayer, updatePiece board move, Nothing, ct)
     where nextPlayer = if c == Red then Black else Red
           updatedCapBoard = updateCapturePiece board move
 
 canDoubleJump :: GameState -> Maybe Loc
-canDoubleJump gs@(c, board, loc2) = 
+canDoubleJump gs@(c, board, loc2, ct) = 
     case validMoves gs of
             [] -> Nothing
             lst -> loc2
@@ -201,8 +206,8 @@ checkGameOver (c, board, mLoc, ct) = r == 0 || b == 0
 checkWinner :: GameState -> Color
 checkWinner (c, ((x,y):ys), mLoc, ct) = fst y
 
-whoHasWon :: GameState -> Maybe Outcome
-whoHasWon gs@(c, board, mLoc, ct) = undefined
+--whoHasWon :: GameState -> Maybe Outcome
+--whoHasWon gs@(c, board, mLoc, ct) = undefined
 
 --                                                      Extra Notes
 --
