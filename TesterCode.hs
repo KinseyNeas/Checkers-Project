@@ -1,4 +1,5 @@
 import Checkers
+import Data.Maybe
 -- This file provides tester code for testing and debugging of our features and functions. More will be added later down the line.
 
 
@@ -14,6 +15,14 @@ board = [((1,0), blackPiece), ((3,0), blackPiece), ((5,0), blackPiece), ((7,0), 
 
 
 move1 = ((1,2),(2,3))
-maybeLoc = Nothing
-gameState1 = (Black, board, maybeLoc)
 
+maybeLoc :: Maybe Loc
+maybeLoc = Nothing
+gameState1 = (Black, board, maybeLoc, 10)
+
+-- Basic board to check whoWillWin
+testBoard1 :: Board
+testBoard1 = [((3,4),redPiece),((2,3),blackPiece)]
+
+gs2 :: GameState
+gs2 = (Red, testBoard1, maybeLoc, 10)

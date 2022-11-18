@@ -20,22 +20,22 @@ data Color = Red | Black deriving (Show, Eq)
 
 data Class = NoKing | King deriving (Show, Eq)
 
-data Outcome = Win Color | Tie
+data Outcome = Win Color | Tie deriving (Show, Eq)
 
 -- This type contains a move. The first integer in the tuple is the location of the 
 -- checker and the second integer is the location the player wants to move their piece.
 
-type Loc = (Int, Int)
+type Loc = (Int, Int) 
 
-type Move = (Loc,Loc)
+type Move = (Loc,Loc) 
 
 -- This type represnts our board.
 
-type Board = [(Loc, Piece)]
+type Board = [(Loc, Piece)] 
 
 type Count = Int    --Count is the game's turn counter. 
 
-type GameState = (Color, Board, Maybe Loc, Count)
+type GameState = (Color, Board, Maybe Loc, Count) 
 
 
 
@@ -167,10 +167,13 @@ makeMove gState move =
 -- Double jumps are forced.
 updateState :: GameState -> Move -> GameState
 updateState gs@(c, board, mLoc, ct) move@(loc1,loc2) 
-    | isCapturedPiece move gs = (c, updatedCapBoard, canDoubleJump (c, updatedCapBoard, Just loc2, ct), ct)
-    | otherwise = (nextPlayer, updatePiece board move, Nothing, ct)
+    | isCapturedPiece move gs = case canDoubleJump (c, updatedCapBoard, Just loc2, newCt) of
+                                        Nothing -> (nextPlayer, updatedCapBoard, Nothing, newCt)
+                                        loc -> (c, updatedCapBoard, loc, newCt)
+    | otherwise = (nextPlayer, updatePiece board move, Nothing, newCt)
     where nextPlayer = if c == Red then Black else Red
           updatedCapBoard = updateCapturePiece board move
+          newCt = ct - 1
 
 canDoubleJump :: GameState -> Maybe Loc
 canDoubleJump gs@(c, board, loc2, ct) = 
@@ -212,8 +215,8 @@ checkGameOver (c, board, mLoc, ct) = r == 0 || b == 0
 getWinner :: GameState -> Outcome
 getWinner (c, ((x,y):ys), mLoc, ct) = 
     case fst y of 
-        Red -> RedWin
-        Black -> BlackWin
+        Red -> Win Red
+        Black -> Win Black
 
 gameStatus :: GameState -> Maybe Outcome
 gameStatus gs@(c, board, mLoc, ct)
