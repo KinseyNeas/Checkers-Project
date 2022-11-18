@@ -12,11 +12,11 @@ type Piece = (Color, Class)
 -- This data type differentiates the color of the pieces so that we can keep track of which
 -- player is playing/check if they are moving the correct pieces.
 
-data Color = Red | Black deriving Eq
+data Color = Red | Black deriving (Show, Eq)
 
 -- This data type clarifies the type of piece being moved by the player. This will affect the limitations of the piece.
 
-data Class = NoKing | King deriving Eq
+data Class = NoKing | King deriving (Show, Eq)
 
 -- This type contains a move. The first integer in the tuple is the location of the 
 -- checker and the second integer is the location the player wants to move their piece.
