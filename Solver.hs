@@ -46,3 +46,24 @@ decideWinner lst col
 
 bestMove :: GameState -> Move
 bestMove = undefined --validMoves
+
+
+--bestMoveHelp move gs = case gameStatus gs of
+--             Nothing -> (move, outcome)
+--             Just x = let validMoveLst = validMoves gs
+--                          newGsLst = map --(\x -> (move, makeMove x gs))-- validMoveLst -- just map make move
+--                          outcomeLst = map (\(x,y) -> (x, bestMoveHelp x y))  - just call best help on all
+--                        in deriveOutcome&Move outcomeLst
+
+-- deriveOutcome&Move :: [(move, outcome)] -> Color -> (move,outcome)
+-- deriveOutcome&Move lst@(x:xs) col = case [(x,y)|(x,y)<- lst, y == Win col] OR filter (\(x,y) -> y /= Win !Color ) lst of
+--    (y:ys) -> y
+--    [] -> case [(x,y)|(x,y)<- lst, y == Tie] of
+--                (f:fs) -> f
+--                [] -> x
+
+--checkTie :: [()] -> Bool
+--checkPlayer :: Color -> [()] -> Bool
+--checkPlayer col lst = foldr (\(x,y) retVal -> y == Win col || )
+
+-- opponentColor :: Color -> Color
