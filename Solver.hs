@@ -46,3 +46,5 @@ decideWinner lst col
 
 bestMove :: GameState -> Move
 bestMove = undefined --validMoves
+
+bestMove = case gameStatus gs of 
