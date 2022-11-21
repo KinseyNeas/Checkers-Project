@@ -1,3 +1,4 @@
+module TesterCode where
 import Checkers
 import Data.Maybe
 -- This file provides tester code for testing and debugging of our features and functions. More will be added later down the line.
@@ -24,5 +25,11 @@ gameState1 = (Black, board, maybeLoc, 10)
 testBoard1 :: Board
 testBoard1 = [((3,4),redPiece),((2,3),blackPiece)]
 
+testBoard2 :: Board
+testBoard2 = [((3,4),redPiece),((2,3),blackPiece),((6,5),blackPiece)]
+
 gs2 :: GameState
 gs2 = (Red, testBoard1, maybeLoc, 10)
+
+gs3 :: GameState
+gs3 = (Black, testBoard2, maybeLoc, 14)
