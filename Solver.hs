@@ -44,6 +44,7 @@ decideWinner lst col
 -- needs to go through each possible situation until it finds a match
 
 bestMove :: GameState -> Move
+<<<<<<< HEAD
 bestMove gs@(c, board, mLoc, ct) = case gameStatus gs of 
             Nothing -> let validMovesLst = validMoves gs
                            gsLst = catMaybes $ map (makeMove gs) validMovesLst
@@ -53,8 +54,6 @@ bestMove gs@(c, board, mLoc, ct) = case gameStatus gs of
                         in mv
             winner -> error "Hey! The game's over already!"
                            
-
-
 bestMoveHelp :: Move -> GameState -> (Move, Outcome)
 bestMoveHelp move gs@(c, board, mLoc, ct) = case gameStatus gs of 
                 Nothing -> let validMovesLst2 = validMoves gs
@@ -89,4 +88,3 @@ getTuple lst@(l:ls) c = case [(mv, otc) | (mv, otc) <- lst, otc == Win c] of
 --checkPlayer :: Color -> [()] -> Bool
 --checkPlayer col lst = foldr (\(x,y) retVal -> y == Win col || )
 
--- opponentColor :: Color -> Color
