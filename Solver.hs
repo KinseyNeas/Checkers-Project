@@ -54,3 +54,15 @@ getTuple lst@(l:ls) c = case [(mv, otc) | (mv, otc) <- lst, otc == Win c] of
                                 [] -> l
                 
 
+-- Int represents depth
+goodMove :: GameState -> Move -> Int
+goodMove = undefined
+
+whoMightWin :: GameState -> Int
+whoMightWin  = undefined
+
+scoreBoard :: GameState -> Int
+scoreBoard = undefined
+
+scorePlayer :: Board -> Color -> Int
+scorePlayer = undefined
