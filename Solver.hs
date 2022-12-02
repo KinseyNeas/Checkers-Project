@@ -18,25 +18,27 @@ whoWillWin gs@(c, board, mLoc, ct) =
 
 decideWinner :: [Outcome] -> Color -> Outcome
 decideWinner lst col  
-    | currPlayer `elem` lst = currPlayer
+    | Win col `elem` lst = Win col
     | Tie `elem` lst = Tie
     | otherwise = opponent
-    where currPlayer = case col of 
-                    Red -> Win Red
-                    Black -> Win Black
-          opponent = case currPlayer of
-                    Win Red -> Win Black
-                    Win Black -> Win Red
+    where opponent = case col of
+                    Red -> Win Black
+                    Black -> Win Red
 
 bestMove :: GameState -> Move
 bestMove gs@(c, board, mLoc, ct) = case gameStatus gs of 
             Nothing -> let validMovesLst = validMoves gs
-                           gsLst = catMaybes $ map (makeMove gs) validMovesLst
-                           input = zip validMovesLst gsLst
+                           --gsLst = catMaybes $ map (makeMove gs) validMovesLst
+                           input = catMaybes [pullMaybe (a, makeMove gs a) | a <- validMovesLst]     --zip validMovesLst gsLst
                            bestOutcomeLst = map (\(x,y) -> bestMoveHelp x y) input
                            (mv, otc) = getTuple bestOutcomeLst c
                         in mv
             winner -> error "Hey! The game's over already!"
+
+pullMaybe :: (a, Maybe b) -> Maybe (a,b)
+pullMaybe (a,b) = case b of
+                Just b -> Just (a,b)
+                Nothing -> Nothing 
                            
 bestMoveHelp :: Move -> GameState -> (Move, Outcome)
 bestMoveHelp move gs@(c, board, mLoc, ct) = case gameStatus gs of 
