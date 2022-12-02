@@ -59,10 +59,30 @@ goodMove :: GameState -> Move -> Int
 goodMove = undefined
 
 whoMightWin :: GameState -> Int
-whoMightWin  = undefined
+whoMightWin gs@(c, board, mLoc, ct) = case gameStatus gs of
+                        Just (Win col) -> if col == c then 100 else -100
+                        Just Tie -> 0
+                        Nothing -> scoreBoard gs 
 
 scoreBoard :: GameState -> Int
-scoreBoard = undefined
+scoreBoard gs@(c, board, mLoc, ct) = p1 - p2
+        where p1 = scorePlayer board c
+              p2 = scorePlayer board (enemy c)
 
 scorePlayer :: Board -> Color -> Int
-scorePlayer = undefined
+scorePlayer [] col = 0
+scorePlayer (x:xs) col
+                | c == col && roy == King && edgePiece loc = 11 + scorePlayer xs col
+                | c == col && roy == King = 10 + scorePlayer xs col
+                | c == col && edgePiece loc = 6 + scorePlayer xs col
+                | c == col = 5 + scorePlayer xs col
+                | otherwise = scorePlayer xs col
+                where (loc,(c,roy)) = x
+
+edgePiece :: Loc -> Bool
+edgePiece (x,y) = x == 0 || x == 7 
+
+enemy :: Color -> Color
+enemy c = case c of
+            Red -> Black
+            Black -> Red
