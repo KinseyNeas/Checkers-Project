@@ -28,8 +28,14 @@ testBoard1 = [((3,4),redPiece),((2,3),blackPiece)]
 testBoard2 :: Board
 testBoard2 = [((3,4),redPiece),((2,3),blackPiece),((6,5),blackPiece)]
 
+testBoard3 :: Board
+testBoard3 = [((3,4), blackPiece)]
+
 gs2 :: GameState
 gs2 = (Red, testBoard1, maybeLoc, 5)
 
 gs3 :: GameState
 gs3 = (Black, testBoard2, maybeLoc, 14)
+
+gs4 :: GameState
+gs4 = (Black, testBoard3, maybeLoc, 5)

@@ -57,17 +57,37 @@ getTuple lst@(l:ls) c = case [(mv, otc) | (mv, otc) <- lst, otc == Win c] of
                 
 
 -- Int represents depth
-goodMove :: GameState -> Move -> Int
-goodMove = undefined
+goodMove :: GameState -> Int -> Move
+goodMove gs@(c, board, mLoc, ct) depth = case gameStatus gs of
+                Nothing -> let validMovesLst = validMoves gs
+                               input = catMaybes [pullMaybe (a, makeMove gs a) | a <- validMovesLst]
+                               scoreLst = map (\(x,y) -> getScore x c depth y) input
+                               (score, move) = maximum scoreLst
+                            in move
+                            --in move
+                winner -> error "Hey! The game's over already!"
 
-whoMightWin :: GameState -> Int
-whoMightWin gs@(c, board, mLoc, ct) = case gameStatus gs of
-                        Just (Win col) -> if col == c then 100 else -100
+getScore :: Move -> Color -> Int -> GameState -> (Int, Move)
+getScore move color 0 gs = (whoMightWin gs color, move)
+getScore move color depth gs = case gameStatus gs of
+                            Nothing -> let validMovesLst2 = validMoves gs
+                                           newGsLst = catMaybes $ map (makeMove gs) validMovesLst2
+                                           scoreLst = map (getScore move color (depth-1)) newGsLst 
+                                        in maximum scoreLst
+                            winner -> (whoMightWin gs color, move)
+
+--findHighScore :: [(Int, Move)] -> (Int, Move)
+--findHighScore lst = maximum lst
+
+
+whoMightWin :: GameState -> Color -> Int
+whoMightWin gs c = case gameStatus gs of
                         Just Tie -> 0
-                        Nothing -> scoreBoard gs 
+                        Just (Win col) -> if col == c then 100 else -100
+                        Nothing -> scoreBoard gs c
 
-scoreBoard :: GameState -> Int
-scoreBoard gs@(c, board, mLoc, ct) = p1 - p2
+scoreBoard :: GameState -> Color -> Int
+scoreBoard gs c = p1 - p2
         where p1 = scorePlayer board c
               p2 = scorePlayer board (enemy c)
 
