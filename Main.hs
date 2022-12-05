@@ -30,19 +30,23 @@ main = do
             let fname = if null inputs then "game.txt" else head inputs
             gs <- loadGame fname 
             findWinner flags gs
-            setDepth flags
+            setDepth flags gs
             inputMove flags gs
-            beVerbose flags gs
+            beVerbose flags gs --how does verbose work?
 
 findWinner :: [Flag] -> GameState -> IO()
 findWinner flags gs = do
     if Winner `elem` flags
         then putStrLn $ bestMove gs
+    else putStrLn ""
 
-setDepth :: [Flag] --change later
-setDepth ((Depth x):_) = -- figure out how to set the depth
-setDepth (_:flags) = setDepth flags
-setDepth [] =  --set standard depth
+setDepth :: [Flag] -> GameState -> IO()--change later
+setDepth ((Depth x):_) (turn, board, Nothing, ct) = do -- figure out how to set the depth
+    let d = read x :: Int
+    let game = (turn, board, Nothing, d)
+    putStrLn $ bestMove game -- is this right? or I could use writeFile?
+setDepth (_:flags) gs = setDepth flags
+setDepth [] gs = do putStrLn ""
 
 inputMove :: [Flags] -> [GameState] -> IO()
 inputMove ((Move a):_) gs = do
@@ -53,14 +57,15 @@ inputMove ((Move a):_) gs = do
         newgs = updateState gs mv
     in putStrLn $ showGame newgs
 inputMove (_:flags) gs = inputMove flags
-inputMove [] gs = -- add later
+inputMove [] gs = do putStrLn "" 
 
-beVerbose :: Move -> [Flag] -> GameState -> IO()
-beVerbose mv flags gs = do
+beVerbose :: [Flag] -> GameState -> IO()
+beVerbose flags gs = do
     if Verbose `elem` flags
-        then let (m,o) = bestMoveHelp mv gs
-             putStrLn $ bestMove gs
-             putStrLn o
+        then let m = bestMove gs
+             putStrLn m 
+             putStrLn $ wintoStr $ whoWillWin m
+    else putStrLn ""
 
 playCheckers :: Game -> IO()
 playCheckers game = do
