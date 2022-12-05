@@ -21,56 +21,56 @@ options = [Options ['w'] ["winner"] (noArg) "print out the best move"
 
 main :: IO ()
 main = do
-    args <- getArgs
-    let (flags, inputs, error) = getOpt Permute options args
-    putStrLn $ show (flags, inputs, error)
-    if Help `elem` flags
-        then putStrLn $ usageinfo "Checkers [options] [file]" options
-        else do
-            let fname = if null inputs then "game.txt" else head inputs
-            gs <- loadGame fname 
-            findWinner flags gs
-            setDepth flags gs
-            inputMove flags gs
-            beVerbose flags gs --how does verbose work?
+   args <- getArgs
+   let (flags, inputs, error) = getOpt Permute options args
+   putStrLn $ show (flags, inputs, error)
+   if Help `elem` flags
+      then putStrLn $ usageinfo "Checkers [options] [file]" options
+   else do
+      let fname = if null inputs then "game.txt" else head inputs
+      gs <- loadGame fname 
+      findWinner flags gs
+      setDepth flags gs
+      inputMove flags gs
+      beVerbose flags gs --how does verbose work?
+      emptyDefault flags gs
 
 findWinner :: [Flag] -> GameState -> IO()
 findWinner flags gs = do
-    if Winner `elem` flags
-        then putStrLn $ bestMove gs
-    else putStrLn ""
+   if Winner `elem` flags
+      then putStrLn $ bestMove gs
+   else putStrLn ""
 
 setDepth :: [Flag] -> GameState -> IO()--change later
 setDepth ((Depth x):_) (turn, board, Nothing, ct) = do -- figure out how to set the depth
-    let d = read x :: Int
-    let game = (turn, board, Nothing, d)
-    putStrLn $ bestMove game -- is this right? or I could use writeFile?
+   let d = read x :: Int
+   let game = (turn, board, Nothing, d)
+   putStrLn $ bestMove game -- is this right? or I could use writeFile?
 setDepth (_:flags) gs = setDepth flags
 setDepth [] gs = do putStrLn ""
 
 inputMove :: [Flags] -> [GameState] -> IO()
 inputMove ((Move a):_) gs = do
-    let (xf:xfs) = splitOn "," a
-        x = [b | b<-xf, b /= "(", b /= ")", b /= " "]
-        y = [b | b<-xfs, b /= "(", b /= ")", b /= " "]
-        mv = (read x :: Int, read y :: Int)
-        newgs = updateState gs mv
-    in putStrLn $ showGame newgs
+   let (xf:xfs) = splitOn "," a
+   let x = [b | b<-xf, b /= "(", b /= ")", b /= " "]
+   let y = [b | b<-xfs, b /= "(", b /= ")", b /= " "]
+   let mv = (read x :: Int, read y :: Int)
+   let newgs = updateState gs mv
+   putStrLn $ showGame newgs
 inputMove (_:flags) gs = inputMove flags
 inputMove [] gs = do putStrLn "" 
 
 beVerbose :: [Flag] -> GameState -> IO()
 beVerbose flags gs = do
-    if Verbose `elem` flags
-        then let m = bestMove gs
-             putStrLn m 
-             putStrLn $ wintoStr $ whoWillWin m
-    else putStrLn ""
+   if Verbose `elem` flags
+      then 
+            let m = bestMove gs
+            putStrLn m
+            putStrLn $ wintoStr $ whoWillWin m
+   else putStrLn ""
 
-playCheckers :: Game -> IO()
-playCheckers game = do
-    if not (checkGameOver game)
-       then continueGame
-       else endGame where
-    continueGame = undefined
-    endGame = undefined
+emptyDefault :: [Flags] -> GameState -> IO()
+emptyDefault [] (turn, board, Nothing, ct) = do -- figure out how to set the depth
+   let game = (turn, board, Nothing, 4) --default depth is 4 for now
+   putStrLn $ bestMove game
+emptyDefault _ gs = do putStrLn ""
