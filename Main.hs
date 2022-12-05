@@ -9,15 +9,17 @@ import System.Exit
 import Text.Read
 import System.Environment
 import System.Console.GetOpt
+import Data.List.Split
 
-data Flag = Winner | Depth String | Help | Move String | Verbose deriving (Ed,Show)
+
+data Flag = Winner | Depth String | Help | Move String | Verbose deriving (Eq,Show)
 
 options :: [OptDescr Flag]
-options = [Options ['w'] ["winner"] (noArg) "print out the best move"
-         , Options ['d'] ["depth"] (RegArg Depth "<num>") "Use <num> as a cutoff depth"
-         , Options ['h'] ["help"] (noArg) "print out help message and quit the program"
-         , Options ['m'] ["move"] (RegArg Move "<move>") "make a <move> and print out the resulting board"
-         , Options ['v'] ["verbose"] (noArg) "output the move and a description of how good it is"]
+options = [Option ['w'] ["winner"] (NoArg) "print out the best move"
+         , Option ['d'] ["depth"] (ReqArg Depth "<num>") "Use <num> as a cutoff depth"
+         , Option ['h'] ["help"] (NoArg) "print out help message and quit the program"
+         , Option ['m'] ["move"] (ReqArg Move "<move>") "make a <move> and print out the resulting board"
+         , Option ['v'] ["verbose"] (NoArg) "output the move and a description of how good it is"]
 
 main :: IO ()
 main = do
@@ -25,7 +27,7 @@ main = do
    let (flags, inputs, error) = getOpt Permute options args
    putStrLn $ show (flags, inputs, error)
    if Help `elem` flags
-      then putStrLn $ usageinfo "Checkers [options] [file]" options
+      then putStrLn $ usageInfo "Checkers [options] [file]" options
    else do
       let fname = if null inputs then "game.txt" else head inputs
       gs <- loadGame fname 
@@ -38,22 +40,20 @@ main = do
 findWinner :: [Flag] -> GameState -> IO()
 findWinner flags gs = do
    if Winner `elem` flags
-      then putStrLn $ bestMove gs
+      then putStrLn $ show $ bestMove gs
    else putStrLn ""
 
-setDepth :: [Flag] -> GameState -> IO()--change later
-setDepth ((Depth x):_) (turn, board, Nothing, ct) = do -- figure out how to set the depth
+setDepth :: [Flag] -> GameState -> IO()
+setDepth ((Depth x):_) gs = do 
    let d = read x :: Int
-   let game = (turn, board, Nothing, d)
-   putStrLn $ bestMove game -- is this right? or I could use writeFile?
-setDepth (_:flags) gs = setDepth flags
+   putStrLn $ show $ goodMove gs d -- is this right? or I could use writeFile?
+setDepth (_:flags) gs = setDepth flags gs
 setDepth [] gs = do putStrLn ""
 
-inputMove :: [Flags] -> [GameState] -> IO()
+inputMove :: [Flag] -> GameState -> IO()
 inputMove ((Move a):_) gs = do
-   let (xf:xfs) = splitOn "," a
-   let x = [b | b<-xf, b /= "(", b /= ")", b /= " "]
-   let y = [b | b<-xfs, b /= "(", b /= ")", b /= " "]
+   let xf = splitOn "," a
+   let [x,y] = [b | b<-xf, b /= "(", b /= ")", b /= " "]
    let mv = (read x :: Int, read y :: Int)
    let newgs = updateState gs mv
    putStrLn $ showGame newgs
@@ -64,13 +64,11 @@ beVerbose :: [Flag] -> GameState -> IO()
 beVerbose flags gs = do
    if Verbose `elem` flags
       then 
-            let m = bestMove gs
-            putStrLn m
+         let m = bestMove gs
+         in putStrLn $ show m
             putStrLn $ wintoStr $ whoWillWin m
    else putStrLn ""
 
-emptyDefault :: [Flags] -> GameState -> IO()
-emptyDefault [] (turn, board, Nothing, ct) = do -- figure out how to set the depth
-   let game = (turn, board, Nothing, 4) --default depth is 4 for now
-   putStrLn $ bestMove game
+emptyDefault :: [Flag] -> GameState -> IO()
+emptyDefault [] gs = do putStrLn $ show $ goodMove gs 4    --default depth is 4 for now
 emptyDefault _ gs = do putStrLn ""
