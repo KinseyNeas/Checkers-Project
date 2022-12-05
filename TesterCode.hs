@@ -63,7 +63,7 @@ testBoard5 = [((3,0), redKing), ((4,1), blackPiece), ((6,3), blackPiece), ((4,5)
 -- A board with a redking atop capable of doing jump moves to eliminate a board of 6 black pieces. Used to debug bestmove for both sides
 
 gs6 :: GameState
-gs6 =(Black, testBoard5, (7,4), 5)
+gs6 =(Black, testBoard5, maybeLoc, 5)
 -- Ask about maybeLoc
 
 gs6h :: GameState
