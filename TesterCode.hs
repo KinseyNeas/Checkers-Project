@@ -67,7 +67,7 @@ gs6 =(Black, testBoard5, maybeLoc, 5)
 -- Ask about maybeLoc
 
 gs6h :: GameState
-gs6h = (red, testBoard5, maybeLoc, 5)
+gs6h = (Red, testBoard5, maybeLoc, 5)
 
 testBoard6 :: Board
 testBoard6 = [((7,0), blackPiece), ((5,2), blackPiece), ((7,4), blackPiece), ((5,4), blackPiece), ((6,5), redPiece), ((5,6), redPiece), ((6,7), redPiece)]
