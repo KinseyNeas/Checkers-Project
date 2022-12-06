@@ -37,5 +37,8 @@ gs2 = (Red, testBoard1, maybeLoc, 5)
 gs3 :: GameState
 gs3 = (Black, testBoard2, maybeLoc, 14)
 
+gs3r :: GameState
+gs3r = (Red, testBoard2, maybeLoc, 14)
+
 gs4 :: GameState
 gs4 = (Black, testBoard3, maybeLoc, 5)
