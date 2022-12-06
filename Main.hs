@@ -32,20 +32,27 @@ main = do
    else do
       let fname = if null inputs then "testGame.txt" else head inputs
       gs <- loadGame fname
-      moveIO flags (inputMove flags gs) gs
-      (chooseAction flags) gs
+      case inputMove flags gs of
+         Nothing -> (chooseAction flags) gs
+         Just mv -> do
+                     moveIO flags mv gs
+                     --(chooseAction flags) gs
 
 chooseAction :: [Flag] -> GameState -> IO()
 chooseAction flags gs 
    | Winner `elem` flags = findWinner flags gs
-   | otherwise = emptyDefault flags gs
+   | flags == [] = emptyDefault flags gs
+   | otherwise = do
+                     putStrLn "not a valid flag"
+                     putStrLn $ usageInfo "Checkers [options] [file]" options
 
 findWinner :: [Flag] -> GameState -> IO()
-findWinner flags gs = if Verbose `elem` flags 
-                        then do putStrLn $ show mv
-                                beVerbose gs mv 
-                                else do putStrLn $ show mv
-                     where mv = bestMove gs
+findWinner flags gs = case bestMove gs of
+                           Nothing -> putStrLn "The game is already over! There's no move to be made."
+                           Just mv -> if Verbose `elem` flags 
+                                      then do putStrLn $ show mv
+                                              beVerbose gs mv 
+                                      else putStrLn $ show mv
    
   -- putStrLn $ show $ bestMove gs --showGame gs 
 
@@ -59,35 +66,36 @@ inputMove ((Move a):_) gs = Just (read a :: Move)
 inputMove (_:flags) gs = inputMove flags gs
 inputMove [] gs = Nothing
 
-moveIO :: [Flag] -> Maybe Move -> GameState -> IO()
-moveIO flags (Just mv) gs = do 
-   case makeMove gs mv of
-         Nothing -> do putStrLn $ showGame gs
-                       putStrLn "This is an invalid move. Choose another one!"
-         Just newGS ->  if Verbose `elem` flags 
-                        then do putStrLn $ showGame newGS
-                                beVerbose gs mv 
-                                else do putStrLn $ showGame newGS
-                                        putStrLn $ show mv
-moveIO flags Nothing gs = putStrLn ""
+moveIO :: [Flag] -> Move -> GameState -> IO()
+moveIO flags move gs = do
+    case makeMove gs move of
+            Nothing -> do putStrLn $ showGame gs
+                          putStrLn "This is an invalid move. Choose another one!"
+            Just newGS ->  if Verbose `elem` flags 
+                           then do putStrLn $ showGame newGS
+                                   beVerbose gs move 
+                           else putStrLn $ showGame newGS
+                                          --putStrLn $ show mv
+--moveIO flags Nothing gs = putStrLn "death"
 
 beVerbose :: GameState -> Move -> IO()
 beVerbose gs@(c, board, mLoc, count) m
             | 100 == score = putStrLn "This move leads to a win!"
-            | 0 == score = putStrLn "This move leads to a stalemate!"
+            | 0 < score = putStrLn "This move gives you an advantage!" 
+            | 0 == score = putStrLn "This move leads to an even board!"
             | -100 == score = putStrLn "This move leads to a loss!"
-            | otherwise = putStrLn $ show score
+            | otherwise = putStrLn "This move puts you at a disadvantage!"
             where score = whoMightWin gs c--(updateState gs m) c
 
      
 
 emptyDefault :: [Flag] -> GameState -> IO()
-emptyDefault flags gs = do 
-   if Verbose `elem` flags
-      then do 
-         beVerbose gs mv
-         putStrLn $ show mv
-   else do putStrLn $ show mv
-   where mv = goodMove gs d
-         d = setDepth flags
+emptyDefault flags gs = case goodMove gs d of
+   Nothing -> putStrLn "The game is over! No moves to make."
+   Just mv ->  if Verbose `elem` flags
+               then do 
+                     beVerbose gs mv
+                     putStrLn $ show mv
+               else do putStrLn $ show mv
+   where d = setDepth flags
    
