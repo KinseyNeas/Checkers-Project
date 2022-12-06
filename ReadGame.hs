@@ -10,14 +10,15 @@ import Data.List.Split
 --    continueGame = undefined
 --    endGame = undefined
 
-readGame :: String -> GameState -- converts file String to GameState
-readGame a = let (x:xs) = splitOn " | " a
-                 row = zip [0..7] (splitOn " \\n " x)
-                 board = concat[makeBoard (splitOn "  " text) 0 y | (y,text) <- row]
-                 color = findColor xs
-                 maybeLoc = findMaybeLoc xs
-                 count = findCount xs
-             in (color, board, maybeLoc, count)
+readGame :: String -> Maybe GameState -- converts file String to GameState
+readGame a = case splitOn " | " a of
+                [] ->  Nothing
+                (x:xs) -> let row = zip [0..7] (splitOn " \\n " x)
+                              board = concat[makeBoard (splitOn "  " text) 0 y | (y,text) <- row]
+                              color = findColor xs
+                              maybeLoc = findMaybeLoc xs
+                              count = findCount xs
+                          in Just (color, board, maybeLoc, count)
 
 makeBoard :: [String] -> Int -> Int -> Board
 makeBoard [] x y = []
@@ -70,8 +71,9 @@ writeGame g fp = do
 loadGame :: FilePath -> IO GameState -- readGame() to get the gamestate and show in IO
 loadGame fp = do 
                 fil <- readFile fp
-                let rg = readGame fil
-                return rg
+                case readGame fil of
+                     Nothing -> error "There is no game here sir!"
+                     Just game -> return game
 
 putWinner :: GameState -> IO () -- Hold on this one for the other group
 putWinner gs = do  
