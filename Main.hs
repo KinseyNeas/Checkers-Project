@@ -44,7 +44,7 @@ chooseAction flags gs
    | flags == [] = emptyDefault flags gs
    | otherwise = do
                      putStrLn "not a valid flag"
-                     putStrLn $ usageInfo "Checkers [options] [file]" options
+                     putStrLn $ usageInfo "Checkers [options] [file]" options                
 
 findWinner :: [Flag] -> GameState -> IO()
 findWinner flags gs = case bestMove gs of
