@@ -26,37 +26,41 @@ main :: IO ()
 main = do
    args <- getArgs
    let (flags, inputs, error) = getOpt Permute options args
-   putStrLn $ show (flags, inputs, error)
+   --putStrLn $ show (flags, inputs, error)
    if Help `elem` flags
       then putStrLn $ usageInfo "Checkers [options] [file]" options
    else do
       let fname = if null inputs then "testGame.txt" else head inputs
-      gs <- loadGame fname 
-      chooseAction flags gs
+      gs <- loadGame fname
+      moveIO (inputMove flags gs) gs
+      (chooseAction flags) gs
 
 chooseAction :: [Flag] -> GameState -> IO()
 chooseAction flags gs 
    | Winner `elem` flags = findWinner flags gs
-   | (Move "<move>") `elem` flags = inputMove flags gs --what do I put there instead of String?
    | otherwise = emptyDefault flags gs
 
 findWinner :: [Flag] -> GameState -> IO()
-findWinner flags gs = do putStrLn $ show $ bestMove gs
+findWinner flags gs = do putStrLn $ show $ bestMove gs --showGame gs 
 
-setDepth :: [Flag] -> GameState -> Int
-setDepth ((Depth x):_) gs = read x :: Int
-setDepth (_:flags) gs = setDepth flags gs
-setDepth [] gs = 4
+setDepth :: [Flag] -> Int
+setDepth ((Depth x):_) = read x :: Int
+setDepth (_:flags)  = setDepth flags 
+setDepth []  = 4
 
-inputMove :: [Flag] -> GameState -> IO()
-inputMove ((Move a):_) gs = do
+inputMove :: [Flag] -> GameState -> Maybe Move
+inputMove ((Move a):_) gs = 
    let xf = splitOn "," a
-   let [x1,y1,x2,y2] = [b | b<-xf, b /= "(", b /= ")", b /= " "]
-   let mv = ((read x1 :: Int, read y1 :: Int),(read x2 :: Int, read y2 :: Int)) -- need to make this a move
-   let newgs = updateState gs mv
-   putStrLn $ showGame newgs
+       [x1,y1,x2,y2] = [b | b<-xf, b /= "(", b /= ")", b /= " "]
+   in Just ((read x1 :: Int, read y1 :: Int),(read x2 :: Int, read y2 :: Int))
 inputMove (_:flags) gs = inputMove flags gs
-inputMove [] gs = do putStrLn "" 
+inputMove [] gs = Nothing
+
+moveIO :: Maybe Move -> GameState -> IO()
+moveIO (Just x) gs = do 
+   let ng = updateState gs x
+   putStrLn $ showGame ng
+moveIO Nothing gs = do putStrLn ""
 
 beVerbose :: [Flag] -> GameState -> Move -> IO()
 beVerbose flags gs m =
@@ -68,7 +72,7 @@ beVerbose flags gs m =
 
 emptyDefault :: [Flag] -> GameState -> IO()
 emptyDefault flags gs = do 
-   let d = setDepth flags gs
+   let d = setDepth flags
    if Verbose `elem` flags
       then do 
          let mv = goodMove gs d

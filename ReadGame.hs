@@ -84,5 +84,3 @@ wintoStr o = case o of
     Win Red -> "Red Wins!"
     Win Black -> "Black Wins!"
     Tie -> "Its a tie!"
-    _ -> "Uh oh! Something is really wrong!"
-

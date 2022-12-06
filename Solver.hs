@@ -62,7 +62,7 @@ goodMove gs@(c, board, mLoc, ct) depth = case gameStatus gs of
                 Nothing -> let validMovesLst = validMoves gs
                                input = catMaybes [pullMaybe (a, makeMove gs a) | a <- validMovesLst]
                                scoreLst = map (\(x,y) -> getScore x c depth y) input
-                               (score, move) = maximum scoreLst
+                               (score, move) = maximum scoreLst 
                             in move
                             --in move
                 winner -> error "Hey! The game's over already!"

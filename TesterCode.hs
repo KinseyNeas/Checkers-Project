@@ -45,15 +45,15 @@ gs3r = (Red, testBoard2, maybeLoc, 14)
 gs3t :: GameState
 gs3t = (Black, testBoard3, maybeLoc, 5)
 
-testBoard3 :: Board
-testBoard3 = [((1,1), blackPiece),((3,1), blackPiece), ((5,1), blackPiece), ((7,1), blackPiece),((0,2), blackPiece), ((2,2), blackPiece), ((4,2), blackPiece), ((6,2), blackPiece), ((1,3), blackPiece),((3,3), blackPiece), ((5,3), blackPiece), ((7,3), blackPiece),((0,4), redPiece), ((2,4), redPiece), ((4,4), redPiece), ((6,4), redPiece),((1,5), redPiece), ((3,5), redPiece), ((5,5), redPiece), ((7,5), redPiece),((0,6), redPiece), ((2,6), redPiece), ((4,6), redPiece), ((6,6), redPiece)]
+testBoard3_5 :: Board
+testBoard3_5 = [((1,1), blackPiece),((3,1), blackPiece), ((5,1), blackPiece), ((7,1), blackPiece),((0,2), blackPiece), ((2,2), blackPiece), ((4,2), blackPiece), ((6,2), blackPiece), ((1,3), blackPiece),((3,3), blackPiece), ((5,3), blackPiece), ((7,3), blackPiece),((0,4), redPiece), ((2,4), redPiece), ((4,4), redPiece), ((6,4), redPiece),((1,5), redPiece), ((3,5), redPiece), ((5,5), redPiece), ((7,5), redPiece),((0,6), redPiece), ((2,6), redPiece), ((4,6), redPiece), ((6,6), redPiece)]
 -- Test board for a better developed game, with all pieces ahead by one row
 
 gs4 :: GameState
-gs4 = (Black, testBoard3, maybeLoc, 14)
+gs4 = (Black, testBoard3_5, maybeLoc, 14)
 
 gs4h :: GameState
-gs4h = (Red, testBoard3, maybeLoc, 14)
+gs4h = (Red, testBoard3_5, maybeLoc, 14)
 
 
 testBoard4 :: Board
