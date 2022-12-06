@@ -21,6 +21,7 @@ move1 = ((1,2),(2,3))
 
 maybeLoc :: Maybe Loc
 maybeLoc = Nothing
+gameState1 :: GameState
 gameState1 = (Black, board, maybeLoc, 10)
 
 -- Basic board to check whoWillWin

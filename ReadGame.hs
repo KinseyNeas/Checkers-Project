@@ -12,7 +12,7 @@ import Data.List.Split
 
 readGame :: String -> GameState -- converts file String to GameState
 readGame a = let (x:xs) = splitOn " | " a
-                 row = zip [0..7] (splitOn " \n " x)
+                 row = zip [0..7] (splitOn " \\n " x)
                  board = concat[makeBoard (splitOn "  " text) 0 y | (y,text) <- row]
                  color = findColor xs
                  maybeLoc = findMaybeLoc xs

@@ -32,7 +32,7 @@ main = do
    else do
       let fname = if null inputs then "testGame.txt" else head inputs
       gs <- loadGame fname
-      moveIO (inputMove flags gs) gs
+      moveIO flags (inputMove flags gs) gs
       (chooseAction flags) gs
 
 chooseAction :: [Flag] -> GameState -> IO()
@@ -41,42 +41,53 @@ chooseAction flags gs
    | otherwise = emptyDefault flags gs
 
 findWinner :: [Flag] -> GameState -> IO()
-findWinner flags gs = do putStrLn $ show $ bestMove gs --showGame gs 
+findWinner flags gs = if Verbose `elem` flags 
+                        then do putStrLn $ show mv
+                                beVerbose gs mv 
+                                else do putStrLn $ show mv
+                     where mv = bestMove gs
+   
+  -- putStrLn $ show $ bestMove gs --showGame gs 
 
 setDepth :: [Flag] -> Int
 setDepth ((Depth x):_) = read x :: Int
 setDepth (_:flags)  = setDepth flags 
-setDepth []  = 4
+setDepth [] = 4
 
 inputMove :: [Flag] -> GameState -> Maybe Move
-inputMove ((Move a):_) gs = 
-   let xf = splitOn "," a
-       [x1,y1,x2,y2] = [b | b<-xf, b /= "(", b /= ")", b /= " "]
-   in Just ((read x1 :: Int, read y1 :: Int),(read x2 :: Int, read y2 :: Int))
+inputMove ((Move a):_) gs = Just (read a :: Move) 
 inputMove (_:flags) gs = inputMove flags gs
 inputMove [] gs = Nothing
 
-moveIO :: Maybe Move -> GameState -> IO()
-moveIO (Just x) gs = do 
-   let ng = updateState gs x
-   putStrLn $ showGame ng
-moveIO Nothing gs = do putStrLn ""
+moveIO :: [Flag] -> Maybe Move -> GameState -> IO()
+moveIO flags (Just mv) gs = do 
+   case makeMove gs mv of
+         Nothing -> do putStrLn $ showGame gs
+                       putStrLn "This is an invalid move. Choose another one!"
+         Just newGS ->  if Verbose `elem` flags 
+                        then do putStrLn $ showGame newGS
+                                beVerbose gs mv 
+                                else do putStrLn $ showGame newGS
+                                        putStrLn $ show mv
+moveIO flags Nothing gs = putStrLn ""
 
-beVerbose :: [Flag] -> GameState -> Move -> IO()
-beVerbose flags gs m =
-   if Verbose `elem` flags
-      then do
-         putStrLn $ show m
-         putStrLn $ wintoStr $ whoWillWin $ updateState gs m
-      else putStrLn ""
+beVerbose :: GameState -> Move -> IO()
+beVerbose gs@(c, board, mLoc, count) m
+            | 100 == score = putStrLn "This move leads to a win!"
+            | 0 == score = putStrLn "This move leads to a stalemate!"
+            | -100 == score = putStrLn "This move leads to a loss!"
+            | otherwise = putStrLn $ show score
+            where score = whoMightWin gs c--(updateState gs m) c
+
+     
 
 emptyDefault :: [Flag] -> GameState -> IO()
 emptyDefault flags gs = do 
-   let d = setDepth flags
    if Verbose `elem` flags
       then do 
-         let mv = goodMove gs d
-         beVerbose flags gs mv
-         putStrLn $ show $ mv
-   else do putStrLn $ show $ goodMove gs d
+         beVerbose gs mv
+         putStrLn $ show mv
+   else do putStrLn $ show mv
+   where mv = goodMove gs d
+         d = setDepth flags
    
