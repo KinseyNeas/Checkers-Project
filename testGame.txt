@@ -1,0 +1,1 @@
+" __  B_  __  B_  __  B_  __  B_ \n B_  __  B_  __  B_  __  B_  __ \n __  B_  __  B_  __  B_  __  B_ \n __  __  __  __  __  __  __  __ \n __  __  __  __  __  __  __  __ \n R_  __  R_  __  R_  __  R_  __ \n __  R_  __  R_  __  R_  __  R_ \n R_  __  R_  __  R_  __  R_  __  | Black's turn | number of turns left: 5"

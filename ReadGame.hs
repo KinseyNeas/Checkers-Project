@@ -1,5 +1,6 @@
 module ReadGame where
 import Checkers
+import Solver
 import Data.List.Split
 --playCheckers :: GameState -> IO()
 --playCheckers game = do
@@ -8,8 +9,6 @@ import Data.List.Split
 --    else endGame where
 --    continueGame = undefined
 --    endGame = undefined
-
-data Outcome = RedWin | BlackWin | Tie
 
 readGame :: String -> GameState -- converts file String to GameState
 readGame a = let (x:xs) = splitOn " | " a
@@ -75,5 +74,15 @@ loadGame fp = do
                 return rg
 
 putWinner :: GameState -> IO () -- Hold on this one for the other group
-putWinner = undefined
+putWinner gs = do  
+                 let win = whoWillWin gs
+                 let strw = wintoStr win
+                 putStrLn strw
+
+wintoStr :: Outcome -> String
+wintoStr o = case o of
+    Win Red -> "Red Wins!"
+    Win Black -> "Black Wins!"
+    Tie -> "Its a tie!"
+    _ -> "Uh oh! Something is really wrong!"
 
