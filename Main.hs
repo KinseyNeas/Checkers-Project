@@ -44,9 +44,7 @@ findWinner :: [Flag] -> GameState -> IO()
 findWinner flags gs = do putStrLn $ show $ bestMove gs
 
 setDepth :: [Flag] -> GameState -> Int
-setDepth ((Depth x):_) gs = 
-   let d = read x :: Int
-   in d 
+setDepth ((Depth x):_) gs = read x :: Int
 setDepth (_:flags) gs = setDepth flags gs
 setDepth [] gs = 4
 
