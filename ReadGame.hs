@@ -72,7 +72,7 @@ loadGame :: FilePath -> IO GameState -- readGame() to get the gamestate and show
 loadGame fp = do 
                 fil <- readFile fp
                 case readGame fil of
-                     Nothing -> error "There is no game here sir!"
+                     Nothing -> error "Error! There's no game to load."
                      Just game -> return game
 
 putWinner :: GameState -> IO () -- Hold on this one for the other group

@@ -25,15 +25,15 @@ decideWinner lst col
                     Red -> Win Black
                     Black -> Win Red
 
-bestMove :: GameState -> Move
+bestMove :: GameState -> Maybe Move
 bestMove gs@(c, board, mLoc, ct) = case gameStatus gs of 
             Nothing -> let validMovesLst = validMoves gs
                            --gsLst = catMaybes $ map (makeMove gs) validMovesLst
                            input = catMaybes [pullMaybe (a, makeMove gs a) | a <- validMovesLst]     --zip validMovesLst gsLst
                            bestOutcomeLst = map (\(x,y) -> bestMoveHelp x y) input
                            (mv, otc) = getTuple bestOutcomeLst c
-                        in mv
-            winner -> error "Hey! The game's over already!"
+                        in Just mv
+            winner -> Nothing
 
 pullMaybe :: (a, Maybe b) -> Maybe (a,b)
 pullMaybe (a,b) = case b of
@@ -57,15 +57,15 @@ getTuple lst@(l:ls) c = case [(mv, otc) | (mv, otc) <- lst, otc == Win c] of
                 
 
 -- Int represents depth
-goodMove :: GameState -> Int -> Move
+goodMove :: GameState -> Int -> Maybe Move
 goodMove gs@(c, board, mLoc, ct) depth = case gameStatus gs of
                 Nothing -> let validMovesLst = validMoves gs
                                input = catMaybes [pullMaybe (a, makeMove gs a) | a <- validMovesLst]
                                scoreLst = map (\(x,y) -> getScore x c depth y) input
                                (score, move) = maximum scoreLst 
-                            in move
+                           in Just move
                             --in move
-                winner -> error "Hey! The game's over already!"
+                winner -> Nothing
 
 getScore :: Move -> Color -> Int -> GameState -> (Int, Move)
 getScore move color 0 gs = (whoMightWin gs color, move)
