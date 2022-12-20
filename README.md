@@ -1,6 +1,2 @@
-Checkuhs
-We have be solving checkuhs.
-Kinsey
-Josh
-Sean
-Marcos
+Checkers Game Solver
+by KinseyNeas, JoshGammon, Sean, Marcos
