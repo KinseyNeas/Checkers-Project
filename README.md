@@ -1,2 +1,2 @@
 Checkers Game Solver
-by KinseyNeas, JoshGammon, Sean, Marcos
+created by KinseyNeas (Kinsey), JoshGammon, SStepanik (Sean), mmorale4 (Marcos)
